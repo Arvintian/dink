@@ -5,34 +5,42 @@ import (
 
 	"github.com/Arvintian/go-utils/cmdutil"
 	"github.com/spf13/cobra"
-	"k8s.io/klog/v2"
 )
 
 var Version = "0.0.0-dev"
 
-type DinkCommand struct {
-	Host    string `name:"host" usage:"bind host" default:"0.0.0.0"`
-	Port    int    `name:"port" usage:"bind port" default:"8000"`
-	Version bool   `name:"version" usage:"show version"`
+type AgentCommand struct {
+	Version    bool   `name:"version" usage:"show version"`
+	Data       string `name:"data" usage:"dink data path" default:"/var/lib/dink/data"`
+	DockerData string `name:"docker-data" usage:"docker data path" default:"/var/lib/dink/docker"`
+	DockerHost string `name:"docker-host" usage:"docker daemon host" default:"unix:///var/lib/dink/run/docker.sock"`
 }
 
-func (r *DinkCommand) Run(cmd *cobra.Command, args []string) error {
+var dink AgentCommand
+
+func (r *AgentCommand) Run(cmd *cobra.Command, args []string) error {
 	if r.Version {
 		return r.ShowVersion()
 	}
-	klog.Infof("Run on %s:%d", r.Host, r.Port)
-	<-cmd.Context().Done()
 	return nil
 }
 
-func (r *DinkCommand) ShowVersion() error {
+func (r *AgentCommand) ShowVersion() error {
 	fmt.Println(Version)
 	return nil
 }
 
 func main() {
-	root := cmdutil.Command(&DinkCommand{}, cobra.Command{
+	root := cmdutil.Command(&dink, cobra.Command{
 		Long: "Run docker like container in kubernetes",
 	})
+	root.AddCommand(cmdutil.Command(&CreateCommand{}, cobra.Command{
+		Short: "Create a contianer",
+		Long:  "Create a contianer",
+	}))
+	root.AddCommand(cmdutil.Command(&RemoveCommand{}, cobra.Command{
+		Short: "Remove a contianer",
+		Long:  "Remove a contianer",
+	}))
 	cmdutil.Main(root)
 }
