@@ -24,7 +24,7 @@ func (r *RemoveCommand) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := os.RemoveAll(filepath.Join(dink.Data, "containers", r.ID)); err != nil {
+	if err := os.RemoveAll(filepath.Join(dink.Root, "containers", r.ID)); err != nil {
 		return err
 	}
 

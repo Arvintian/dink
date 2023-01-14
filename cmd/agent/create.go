@@ -58,14 +58,11 @@ func (r *CreateCommand) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	// create runc bundle
-	containerHome := filepath.Join(dink.Data, "containers", createRsp.ID)
+	containerHome := filepath.Join(dink.Root, "containers", createRsp.ID)
 	if err := utils.CreateDir(containerHome, 0755); err != nil {
 		return err
 	}
-	containerRootFS := filepath.Join(containerHome, "rootfs")
-	if err := utils.CreateDir(containerRootFS, 0755); err != nil {
-		return err
-	}
+	containerRunHome := filepath.Join(dink.RuncRoot, createRsp.ID)
 
 	bts, err := json.Marshal(inspectRsp)
 	if err != nil {
@@ -83,7 +80,7 @@ func (r *CreateCommand) Run(cmd *cobra.Command, args []string) error {
 		runcConfig.Process.Cwd = inspectRsp.Config.WorkingDir
 	}
 	runcConfig.Hostname = inspectRsp.Config.Hostname
-	runcConfig.Root.Path = containerRootFS
+	runcConfig.Root.Path = filepath.Join(containerRunHome, "rootfs")
 
 	bts, err = json.Marshal(runcConfig)
 	if err != nil {

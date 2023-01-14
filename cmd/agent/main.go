@@ -11,9 +11,10 @@ var Version = "0.0.0-dev"
 
 type AgentCommand struct {
 	Version    bool   `name:"version" usage:"show version"`
-	Data       string `name:"data" usage:"dink data path" default:"/var/lib/dink/data"`
+	Root       string `name:"root" usage:"dink root path" default:"/var/lib/dink"`
+	RuncRoot   string `name:"runc-root" usage:"dink runc root path" default:"/run/dink"`
 	DockerData string `name:"docker-data" usage:"docker data path" default:"/var/lib/dink/docker"`
-	DockerHost string `name:"docker-host" usage:"docker daemon host" default:"unix:///var/lib/dink/run/docker.sock"`
+	DockerHost string `name:"docker-host" usage:"docker daemon host" default:"tcp://127.0.0.1:2375"`
 }
 
 var dink AgentCommand
@@ -41,6 +42,10 @@ func main() {
 	root.AddCommand(cmdutil.Command(&RemoveCommand{}, cobra.Command{
 		Short: "Remove a contianer",
 		Long:  "Remove a contianer",
+	}))
+	root.AddCommand(cmdutil.Command(&StartCommand{}, cobra.Command{
+		Short: "Start a contianer",
+		Long:  "Start a contianer",
 	}))
 	cmdutil.Main(root)
 }
