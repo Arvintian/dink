@@ -4,7 +4,10 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"os/exec"
 	"strings"
+
+	"k8s.io/klog/v2"
 )
 
 func WriteBytesToFile(data []byte, path string) error {
@@ -85,4 +88,29 @@ func CopyFile(src, dst string) error {
 	}
 
 	return out.Close()
+}
+
+func CopyStream(cmd *exec.Cmd) {
+	CopyStdout(cmd)
+	CopyStderr(cmd)
+}
+
+func CopyStdout(cmd *exec.Cmd) {
+	ioOut, ioIn, err := os.Pipe()
+	if err != nil {
+		klog.Error(err)
+		return
+	}
+	cmd.Stdout = ioIn
+	go io.Copy(os.Stdout, ioOut)
+}
+
+func CopyStderr(cmd *exec.Cmd) {
+	ioOut, ioIn, err := os.Pipe()
+	if err != nil {
+		klog.Error(err)
+		return
+	}
+	cmd.Stderr = ioIn
+	go io.Copy(os.Stderr, ioOut)
 }

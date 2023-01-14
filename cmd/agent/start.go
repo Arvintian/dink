@@ -3,7 +3,6 @@ package main
 import (
 	"dink/pkg/utils"
 	"encoding/json"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -31,7 +30,7 @@ func (r *StartCommand) Run(cmd *cobra.Command, args []string) error {
 	}
 	defer os.RemoveAll(containerRunHome)
 
-	// mount rootfs info
+	// mount rootfs
 	var dockerConfig types.ContainerJSON
 	bts, err := os.ReadFile(filepath.Join(containerHome, "docker.json"))
 	if err != nil {
@@ -40,6 +39,7 @@ func (r *StartCommand) Run(cmd *cobra.Command, args []string) error {
 	if err := json.Unmarshal(bts, &dockerConfig); err != nil {
 		return err
 	}
+
 	graph := map[string]string{}
 	for k, v := range dockerConfig.GraphDriver.Data {
 		graph[k] = strings.ReplaceAll(v, "/var/lib/docker", dink.DockerData)
@@ -49,30 +49,29 @@ func (r *StartCommand) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	mount := exec.Command("fuse-overlayfs", "-o",
-		strings.Join([]string{"lowerdir=" + graph["LowerDir"], "upperDir=" + graph["UpperDir"], "workDir=" + graph["WorkDir"]}, ","),
+		strings.Join([]string{"lowerdir=" + graph["LowerDir"], "upperdir=" + graph["UpperDir"], "workdir=" + graph["WorkDir"]}, ","),
 		containerRunRootFS)
-	ioOut, ioIn, err := os.Pipe()
-	if err != nil {
-		return err
-	}
-	mount.Stderr = ioIn
-	mount.Stdout = ioIn
-	go func() {
-		io.Copy(os.Stdout, ioOut)
-	}()
+	utils.CopyStream(mount)
 
 	if err := mount.Run(); err != nil {
 		return err
 	}
 	klog.Infof("mount %s", mount.String())
 
-	// shutdown
-	<-cmd.Context().Done()
+	defer func() {
+		if err := syscall.Unmount(containerRunRootFS, 0); err != nil {
+			klog.Errorf("umount %s error %v", containerRunRootFS, err)
+		}
+		klog.Infof("unmount %s", containerRunRootFS)
+	}()
 
-	if err := syscall.Unmount(containerRunRootFS, 0); err != nil {
-		klog.Errorf("umount %s error %v", containerRunRootFS, err)
+	// start container
+	runc := exec.Command("runc", "--root", filepath.Join(dink.RuncRoot, "runc"), "run", "--bundle", containerRunHome, r.ID)
+	runc.Stdout, runc.Stderr, runc.Stdin = os.Stdout, os.Stderr, os.Stdin
+	klog.Infof("start container %s", runc.String())
+	if err := runc.Run(); err != nil {
+		return err
 	}
-	klog.Infof("unmount %s", containerRunRootFS)
 
 	return nil
 }
