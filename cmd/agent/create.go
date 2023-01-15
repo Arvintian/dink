@@ -23,6 +23,7 @@ type CreateCommand struct {
 	WorkingDir string   `name:"workingdir" usage:"container's workingdir"`
 	Entrypoint []string `name:"entrypoint" usage:"container's entrypoint"`
 	Cmd        []string `name:"cmd" usage:"container's cmd"`
+	TTY        bool     `name:"tty" usage:"container's tty open"`
 }
 
 func (r *CreateCommand) Run(cmd *cobra.Command, args []string) error {
@@ -37,6 +38,7 @@ func (r *CreateCommand) Run(cmd *cobra.Command, args []string) error {
 		WorkingDir: r.WorkingDir,
 		Entrypoint: r.Entrypoint,
 		Cmd:        r.Cmd,
+		Tty:        r.TTY,
 	}
 
 	// image pull

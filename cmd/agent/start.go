@@ -10,12 +10,17 @@ import (
 	"syscall"
 
 	"github.com/docker/docker/api/types"
+	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
 )
 
 type StartCommand struct {
-	ID string `name:"id" usage:"container's id"`
+	ID         string   `name:"id" usage:"container's id"`
+	Env        []string `name:"env" usage:"container's env"`
+	WorkingDir string   `name:"workingdir" usage:"container's workingdir"`
+	Cmd        []string `name:"cmd" usage:"container's cmd"`
+	TTY        bool     `name:"tty" usage:"container's tty open"`
 }
 
 func (r *StartCommand) Run(cmd *cobra.Command, args []string) error {
@@ -25,14 +30,38 @@ func (r *StartCommand) Run(cmd *cobra.Command, args []string) error {
 	if err := utils.CreateDir(containerRunRootFS, 0755); err != nil {
 		return err
 	}
-	if err := utils.CopyFile(filepath.Join(containerHome, "config.json"), filepath.Join(containerRunHome, "config.json")); err != nil {
+	defer os.RemoveAll(containerRunHome)
+
+	// runc config
+	var runcConfig specs.Spec
+	bts, err := os.ReadFile(filepath.Join(containerHome, "config.json"))
+	if err != nil {
 		return err
 	}
-	defer os.RemoveAll(containerRunHome)
+	if err := json.Unmarshal(bts, &runcConfig); err != nil {
+		return err
+	}
+	if len(r.Cmd) > 0 {
+		runcConfig.Process.Args = r.Cmd
+	}
+	runcConfig.Process.Env = append(runcConfig.Process.Env, r.Env...)
+	if r.WorkingDir != "" {
+		runcConfig.Process.Cwd = r.WorkingDir
+	}
+	if r.TTY {
+		runcConfig.Process.Terminal = true
+	}
+	bts, err = json.Marshal(runcConfig)
+	if err != nil {
+		return err
+	}
+	if err := utils.WriteBytesToFile(bts, filepath.Join(containerRunHome, "config.json")); err != nil {
+		return err
+	}
 
 	// mount rootfs
 	var dockerConfig types.ContainerJSON
-	bts, err := os.ReadFile(filepath.Join(containerHome, "docker.json"))
+	bts, err = os.ReadFile(filepath.Join(containerHome, "docker.json"))
 	if err != nil {
 		return err
 	}
@@ -51,13 +80,12 @@ func (r *StartCommand) Run(cmd *cobra.Command, args []string) error {
 	mount := exec.Command("fuse-overlayfs", "-o",
 		strings.Join([]string{"lowerdir=" + graph["LowerDir"], "upperdir=" + graph["UpperDir"], "workdir=" + graph["WorkDir"]}, ","),
 		containerRunRootFS)
-	utils.CopyStream(mount)
-
+	dupStdio(mount)
 	if err := mount.Run(); err != nil {
 		return err
 	}
-	klog.Infof("mount %s", mount.String())
 
+	klog.Infof("mount %s", containerRunRootFS)
 	defer func() {
 		if err := syscall.Unmount(containerRunRootFS, 0); err != nil {
 			klog.Errorf("umount %s error %v", containerRunRootFS, err)
@@ -67,11 +95,15 @@ func (r *StartCommand) Run(cmd *cobra.Command, args []string) error {
 
 	// start container
 	runc := exec.Command("runc", "--root", filepath.Join(dink.RuncRoot, "runc"), "run", "--bundle", containerRunHome, r.ID)
-	runc.Stdout, runc.Stderr, runc.Stdin = os.Stdout, os.Stderr, os.Stdin
-	klog.Infof("start container %s", runc.String())
+	dupStdio(runc)
+	klog.Infof("start container %s", r.ID)
 	if err := runc.Run(); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func dupStdio(cmd *exec.Cmd) {
+	cmd.Stdout, cmd.Stderr, cmd.Stdin = os.Stdout, os.Stderr, os.Stdin
 }
