@@ -7,6 +7,7 @@ require (
 	github.com/docker/docker v20.10.22+incompatible
 	github.com/opencontainers/runtime-spec v1.0.2
 	github.com/spf13/cobra v1.6.0
+	k8s.io/api v0.20.2
 	k8s.io/apimachinery v0.20.2
 	k8s.io/client-go v0.20.2
 	k8s.io/code-generator v0.20.2
@@ -34,6 +35,7 @@ require (
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/googleapis/gnostic v0.4.1 // indirect
 	github.com/hashicorp/golang-lru v0.5.1 // indirect
+	github.com/imdario/mergo v0.3.5 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/mailru/easyjson v0.7.0 // indirect
@@ -60,7 +62,6 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.2.8 // indirect
 	gotest.tools/v3 v3.4.0 // indirect
-	k8s.io/api v0.20.2 // indirect
 	k8s.io/gengo v0.0.0-20201113003025-83324d819ded // indirect
 	k8s.io/kube-openapi v0.0.0-20201113171705-d219536bb9fd // indirect
 	k8s.io/utils v0.0.0-20201110183641-67b214c5f920 // indirect
@@ -69,6 +70,7 @@ require (
 )
 
 replace (
+	k8s.io/api => k8s.io/api v0.20.2
 	k8s.io/apimachinery => k8s.io/apimachinery v0.20.2
 	k8s.io/client-go => k8s.io/client-go v0.20.2
 	k8s.io/code-generator => k8s.io/code-generator v0.20.2
