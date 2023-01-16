@@ -61,7 +61,7 @@ type Handler interface {
 func (c *Controller) Run(threadiness int, stopCh <-chan struct{}) {
 	defer c.Queue.ShutDown()
 
-	klog.Infof("Start controller %s threadiness %d.", c.Name, threadiness)
+	klog.Infof("Start controller %s with %d threadiness", c.Name, threadiness)
 
 	go c.Informer.Run(stopCh)
 
@@ -133,7 +133,7 @@ func (c *Controller) doWork(key string) (res Result, err error) {
 	}
 
 	if obj == nil || !exists {
-		klog.Warningf("Object is nil or not exist, obj %v exist %v ", obj, exists)
+		klog.Warningf("Object is nil or not exist, isNil %v exist %v ", obj == nil, exists)
 		return res, nil
 	}
 

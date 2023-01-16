@@ -6,9 +6,10 @@ IMAGES ?= bundle dind
 REGISTRY ?= arvintian
 
 GIT_VERSION = $(shell git rev-parse --short HEAD)
-BUILD_DIR := ./build
+BINS = agent controller
 ARCH ?= amd64
 
+BUILD_DIR := build
 ifeq ($(ARCH),arm64)
 DOCKERFILE ?= Dockerfile.arm64
 IMAGE_SUFFIX = $(addsuffix -arm64 $(IMAGE_SUFFIX))
@@ -17,12 +18,10 @@ DOCKERFILE ?= Dockerfile
 endif
 
 .PHONY: build
-build: dist/agent
-
-dist/agent: $(shell find pkg -type f -name '*.go') $(shell find cmd/agent -type f -name '*.go')
-	CGO_ENABLED=0 GOOS=linux GOARCH=$(ARCH)
-	go build -v --ldflags="-w -X main.Version=$(GIT_VERSION)" -o dist/agent cmd/agent/*.go
-
+build: $(shell find pkg -type f -name '*.go') $(shell find cmd -type f -name '*.go')
+	for bin in $(BINS); do \
+		CGO_ENABLED=0 GOOS=linux GOARCH=$(ARCH) go build -v --ldflags="-w -X main.Version=$(GIT_VERSION)" -o dist/$${bin} cmd/$${bin}/*.go; \
+	done
 
 images: build	
 	for image in $(IMAGES); do                                                        \
