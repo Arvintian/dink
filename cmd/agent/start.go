@@ -10,7 +10,6 @@ import (
 	"syscall"
 
 	"github.com/docker/docker/api/types"
-	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
 )
@@ -32,15 +31,27 @@ func (r *StartCommand) Run(cmd *cobra.Command, args []string) error {
 	}
 	defer os.RemoveAll(containerRunHome)
 
-	// runc config
-	var runcConfig specs.Spec
-	bts, err := os.ReadFile(filepath.Join(containerHome, "config.json"))
+	var dockerConfig types.ContainerJSON
+	bts, err := os.ReadFile(filepath.Join(containerHome, "docker.json"))
 	if err != nil {
 		return err
 	}
-	if err := json.Unmarshal(bts, &runcConfig); err != nil {
+	if err := json.Unmarshal(bts, &dockerConfig); err != nil {
 		return err
 	}
+
+	// runc config
+	runcConfig := createRuntimeConfig()
+	runcConfig.Process.Args = append(runcConfig.Process.Args, dockerConfig.Config.Entrypoint...)
+	runcConfig.Process.Args = append(runcConfig.Process.Args, dockerConfig.Config.Cmd...)
+	runcConfig.Process.Env = append(runcConfig.Process.Env, dockerConfig.Config.Env...)
+	if dockerConfig.Config.WorkingDir != "" {
+		runcConfig.Process.Cwd = dockerConfig.Config.WorkingDir
+	}
+	runcConfig.Process.Terminal = dockerConfig.Config.Tty
+	runcConfig.Hostname = dockerConfig.Config.Hostname
+	runcConfig.Root.Path = filepath.Join(containerRunHome, "rootfs")
+
 	if len(r.Cmd) > 0 {
 		runcConfig.Process.Args = r.Cmd
 	}
@@ -60,15 +71,6 @@ func (r *StartCommand) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	// mount rootfs
-	var dockerConfig types.ContainerJSON
-	bts, err = os.ReadFile(filepath.Join(containerHome, "docker.json"))
-	if err != nil {
-		return err
-	}
-	if err := json.Unmarshal(bts, &dockerConfig); err != nil {
-		return err
-	}
-
 	graph := map[string]string{}
 	for k, v := range dockerConfig.GraphDriver.Data {
 		graph[k] = strings.ReplaceAll(v, "/var/lib/docker", dink.DockerData)

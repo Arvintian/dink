@@ -10,6 +10,7 @@ import (
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/filters"
 	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
 	"k8s.io/klog/v2"
@@ -42,12 +43,22 @@ func (r *CreateCommand) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	// image pull
-	out, err := dockerCli.ImagePull(cmd.Context(), r.Image, types.ImagePullOptions{})
+	filter := filters.NewArgs()
+	filter.Add("reference", r.Image)
+	images, err := dockerCli.ImageList(cmd.Context(), types.ImageListOptions{
+		Filters: filter,
+	})
 	if err != nil {
 		return err
 	}
-	defer out.Close()
-	io.Copy(os.Stdout, out)
+	if len(images) < 1 {
+		out, err := dockerCli.ImagePull(cmd.Context(), r.Image, types.ImagePullOptions{})
+		if err != nil {
+			return err
+		}
+		defer out.Close()
+		io.Copy(os.Stdout, out)
+	}
 
 	// create container
 	createRsp, err := dockerCli.ContainerCreate(cmd.Context(), config, nil, nil, nil, r.Name)
@@ -59,36 +70,16 @@ func (r *CreateCommand) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// create runc bundle
 	containerHome := filepath.Join(dink.Root, "containers", createRsp.ID)
 	if err := utils.CreateDir(containerHome, 0755); err != nil {
 		return err
 	}
-	containerRunHome := filepath.Join(dink.RuncRoot, createRsp.ID)
 
 	bts, err := json.Marshal(inspectRsp)
 	if err != nil {
 		return err
 	}
 	if err := utils.WriteBytesToFile(bts, filepath.Join(containerHome, "docker.json")); err != nil {
-		return err
-	}
-
-	runcConfig := createRuntimeConfig()
-	runcConfig.Process.Args = append(runcConfig.Process.Args, inspectRsp.Config.Entrypoint...)
-	runcConfig.Process.Args = append(runcConfig.Process.Args, inspectRsp.Config.Cmd...)
-	runcConfig.Process.Env = append(runcConfig.Process.Env, inspectRsp.Config.Env...)
-	if inspectRsp.Config.WorkingDir != "" {
-		runcConfig.Process.Cwd = inspectRsp.Config.WorkingDir
-	}
-	runcConfig.Hostname = inspectRsp.Config.Hostname
-	runcConfig.Root.Path = filepath.Join(containerRunHome, "rootfs")
-
-	bts, err = json.Marshal(runcConfig)
-	if err != nil {
-		return err
-	}
-	if err := utils.WriteBytesToFile(bts, filepath.Join(containerHome, "config.json")); err != nil {
 		return err
 	}
 
