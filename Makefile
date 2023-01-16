@@ -31,5 +31,11 @@ images: build
 	    -f $(BUILD_DIR)/$${image}/$(DOCKERFILE) .;                                    \
 	done
 
+code-gen:
+	go mod vendor
+	rm -rf pkg/apis/dink/v1beta1/*.deepcopy.go
+	rm -rf pkg/generated
+	./hack/update-codegen.sh
+
 clean:
 	rm -rf dist
