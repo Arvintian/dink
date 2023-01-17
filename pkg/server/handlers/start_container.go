@@ -11,7 +11,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/klog/v2"
 )
 
 func StartContainer(c *gin.Context) {
@@ -130,11 +129,6 @@ func StartContainer(c *gin.Context) {
 			"error": err,
 		})
 		return
-	}
-
-	container.Status.State = "Starting"
-	if _, err := client.DinkV1beta1().Containers(container.Namespace).UpdateStatus(c, container, metav1.UpdateOptions{}); err != nil {
-		klog.Error(err)
 	}
 
 	c.JSON(http.StatusOK, gin.H{})
