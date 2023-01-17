@@ -24,13 +24,15 @@ type Container struct {
 
 // ContainerSpec is the spec for a Container resource
 type ContainerSpec struct {
+	HostName      string           `json:"hostname"`
 	RestartPolicy string           `json:"restartPolicy"`
 	Template      corev1.Container `json:"template"`
 }
 
 // ContainerStatus is the status for a Container resource
 type ContainerStatus struct {
-	State int32 `json:"state"`
+	State       int32  `json:"state"`
+	ContainerID string `json:"containerID"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

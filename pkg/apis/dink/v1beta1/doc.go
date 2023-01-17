@@ -27,6 +27,9 @@ var CRDs = []struct {
 					Kind:       ContainerKind,
 					ShortNames: []string{},
 				},
+				Subresources: &apiextensionsv1beta1.CustomResourceSubresources{
+					Status: &apiextensionsv1beta1.CustomResourceSubresourceStatus{},
+				},
 			},
 		},
 	},

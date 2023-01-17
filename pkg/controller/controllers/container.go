@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"dink/pkg/k8s"
 	"reflect"
 
@@ -14,11 +15,11 @@ import (
 	"k8s.io/client-go/util/workqueue"
 )
 
-func NewContainerController(client k8s.Interface) *controller.Controller {
+func NewContainerController(ctx context.Context, client k8s.Interface) *controller.Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := externalversions.NewSharedInformerFactoryWithOptions(
 		client,
-		controller.Config.ResyncPeriodSeconds,
+		controller.Config.ResyncPeriods,
 		externalversions.WithTweakListOptions(func(options *metav1.ListOptions) {
 		}),
 	)
@@ -57,6 +58,6 @@ func NewContainerController(client k8s.Interface) *controller.Controller {
 		ClusterClient: client,
 		Informer:      informer,
 		Queue:         queue,
-		EventHandler:  handlers.NewPodHandler(client, client),
+		EventHandler:  handlers.NewContainerHandler(ctx, client, client),
 	}
 }

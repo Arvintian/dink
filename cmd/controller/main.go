@@ -1,6 +1,7 @@
 package main
 
 import (
+	"dink/pkg/controller"
 	"dink/pkg/controller/controllers"
 	"dink/pkg/k8s"
 	"fmt"
@@ -14,7 +15,11 @@ var Version = "0.0.0-dev"
 type ControllerCommand struct {
 	Version    bool   `name:"version" usage:"show version"`
 	KubeConfig string `name:"kube-config" usage:"kube config file path"`
-	Threads    int    `name:"threads" usage:"controller workers number" default:"5"`
+	Threads    int    `name:"threads" usage:"controller workers number" default:"2"`
+	Root       string `name:"root" usage:"dink root path" default:"/var/lib/dink"`
+	RuncRoot   string `name:"runc-root" usage:"dink runc root path" default:"/run/dink"`
+	DockerData string `name:"docker-data" usage:"docker data path" default:"/var/lib/dink/docker"`
+	DockerHost string `name:"docker-host" usage:"docker daemon host" default:"tcp://127.0.0.1:2375"`
 }
 
 var dink ControllerCommand
@@ -23,6 +28,11 @@ func (r *ControllerCommand) Run(cmd *cobra.Command, args []string) error {
 	if r.Version {
 		return r.ShowVersion()
 	}
+
+	controller.Config.Root = dink.Root
+	controller.Config.RuncRoot = dink.RuncRoot
+	controller.Config.DockerData = dink.DockerData
+	controller.Config.DockerHost = dink.DockerHost
 
 	clientConfig, err := k8s.GetKubeConfig(r.KubeConfig)
 	if err != nil {
@@ -36,7 +46,7 @@ func (r *ControllerCommand) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	containerController := controllers.NewContainerController(client)
+	containerController := controllers.NewContainerController(cmd.Context(), client)
 	go containerController.Run(r.Threads, cmd.Context().Done())
 
 	podController := controllers.NewPodController(client)

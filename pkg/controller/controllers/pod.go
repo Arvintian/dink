@@ -17,7 +17,7 @@ func NewPodController(client k8s.Interface) *controller.Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(
 		client,
-		controller.Config.ResyncPeriodSeconds,
+		controller.Config.ResyncPeriods,
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
 			options.LabelSelector = controller.PodSelector()
 		}),
