@@ -8,6 +8,7 @@ require (
 	github.com/opencontainers/runtime-spec v1.0.2
 	github.com/spf13/cobra v1.6.0
 	k8s.io/api v0.20.2
+	k8s.io/apiextensions-apiserver v0.20.2
 	k8s.io/apimachinery v0.20.2
 	k8s.io/client-go v0.20.2
 	k8s.io/code-generator v0.20.2
@@ -71,6 +72,7 @@ require (
 
 replace (
 	k8s.io/api => k8s.io/api v0.20.2
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.20.2
 	k8s.io/apimachinery => k8s.io/apimachinery v0.20.2
 	k8s.io/client-go => k8s.io/client-go v0.20.2
 	k8s.io/code-generator => k8s.io/code-generator v0.20.2

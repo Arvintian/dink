@@ -9,15 +9,14 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/informers"
-	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 )
 
-func NewPodController(clusterClient kubernetes.Interface, client k8s.Interface) *controller.Controller {
+func NewPodController(client k8s.Interface) *controller.Controller {
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	factory := informers.NewSharedInformerFactoryWithOptions(
-		clusterClient,
+		client,
 		controller.Config.ResyncPeriodSeconds,
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
 			options.LabelSelector = controller.PodSelector()
@@ -55,9 +54,9 @@ func NewPodController(clusterClient kubernetes.Interface, client k8s.Interface) 
 	return &controller.Controller{
 		Name:          "Pod Controller",
 		ClientSet:     client,
-		ClusterClient: clusterClient,
+		ClusterClient: client,
 		Informer:      informer,
 		Queue:         queue,
-		EventHandler:  handlers.NewPodHandler(client, clusterClient),
+		EventHandler:  handlers.NewPodHandler(client, client),
 	}
 }

@@ -53,7 +53,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 
 // GetClient creates a client for k8s cluster
 func GetClient(kubeConfigPath string) (Interface, error) {
-	config, err := getKubeConfig(kubeConfigPath)
+	config, err := GetKubeConfig(kubeConfigPath)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func GetClient(kubeConfigPath string) (Interface, error) {
 
 // GetRateLimitClient creates a client for k8s cluster with custom defined qps and burst.
 func GetRateLimitClient(kubeConfigPath string, qps float32, burst int) (Interface, error) {
-	config, err := getKubeConfig(kubeConfigPath)
+	config, err := GetKubeConfig(kubeConfigPath)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func GetRateLimitClient(kubeConfigPath string, qps float32, burst int) (Interfac
 	return NewForConfig(config)
 }
 
-func getKubeConfig(kubeConfigPath string) (*rest.Config, error) {
+func GetKubeConfig(kubeConfigPath string) (*rest.Config, error) {
 	var config *rest.Config
 	var err error
 	if kubeConfigPath != "" {

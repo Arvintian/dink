@@ -24,14 +24,23 @@ func (r *ControllerCommand) Run(cmd *cobra.Command, args []string) error {
 		return r.ShowVersion()
 	}
 
-	client, err := k8s.GetClient(r.KubeConfig)
+	clientConfig, err := k8s.GetKubeConfig(r.KubeConfig)
 	if err != nil {
 		return err
 	}
 
-	podController := controllers.NewPodController(client, client)
+	ensureCRDsCreated(clientConfig)
 
-	podController.Run(r.Threads, cmd.Context().Done())
+	client, err := k8s.NewForConfig(clientConfig)
+	if err != nil {
+		return err
+	}
+
+	containerController := controllers.NewContainerController(client)
+	go containerController.Run(r.Threads, cmd.Context().Done())
+
+	podController := controllers.NewPodController(client)
+	go podController.Run(r.Threads, cmd.Context().Done())
 
 	<-cmd.Context().Done()
 	return nil
