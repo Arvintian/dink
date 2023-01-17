@@ -12,6 +12,7 @@ var Version = "0.0.0-dev"
 type AgentCommand struct {
 	Version    bool   `name:"version" usage:"show version"`
 	Root       string `name:"root" usage:"dink root path" default:"/var/lib/dink"`
+	RunRoot    string `name:"run-root" usage:"dink root path" default:"/run/dink"`
 	RuncRoot   string `name:"runc-root" usage:"dink runc root path" default:"/run/dink/runc"`
 	DockerData string `name:"docker-data" usage:"docker data path" default:"/var/lib/dink/docker"`
 }

@@ -24,7 +24,7 @@ type StartCommand struct {
 
 func (r *StartCommand) Run(cmd *cobra.Command, args []string) error {
 	containerHome := filepath.Join(dink.Root, "containers", r.ID)
-	containerRunHome := filepath.Join(dink.RuncRoot, r.ID)
+	containerRunHome := filepath.Join(dink.RunRoot, r.ID)
 	containerRunRootFS := filepath.Join(containerRunHome, "rootfs")
 	if err := utils.CreateDir(containerRunRootFS, 0755); err != nil {
 		return err

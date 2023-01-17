@@ -71,6 +71,8 @@ func StartContainer(c *gin.Context) {
 						"/app/agent",
 						"--root",
 						Config.Root,
+						"--run-root",
+						Config.RunRoot,
 						"--runc-root",
 						Config.RuncRoot,
 						"--docker-data",

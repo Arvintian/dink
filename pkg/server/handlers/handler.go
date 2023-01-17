@@ -6,6 +6,7 @@ import (
 
 type ServerConfig struct {
 	Root       string
+	RunRoot    string
 	RuncRoot   string
 	DockerData string
 	AgentImage string
@@ -18,6 +19,7 @@ var Config ServerConfig
 
 func init() {
 	Config.Root = "/var/lib/dink"
+	Config.RunRoot = "/run/dink"
 	Config.RuncRoot = "/run/dink/runc"
 	Config.DockerData = "/var/lib/dink/docker"
 }
