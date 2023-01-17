@@ -6,7 +6,7 @@ IMAGES ?= bundle dind
 REGISTRY ?= arvintian
 
 GIT_VERSION = $(shell git rev-parse --short HEAD)
-BINS = agent controller
+BINS = agent controller server
 ARCH ?= amd64
 
 BUILD_DIR := build
