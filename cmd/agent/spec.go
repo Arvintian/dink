@@ -265,9 +265,6 @@ var runtimeSpec = `
             },
             {
                 "type": "ipc"
-            },
-            {
-                "type": "cgroup"
             }
         ],
         "seccomp": {
