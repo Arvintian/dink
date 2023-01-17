@@ -17,7 +17,7 @@ type ControllerCommand struct {
 	KubeConfig string `name:"kube-config" usage:"kube config file path"`
 	Threads    int    `name:"threads" usage:"controller workers number" default:"2"`
 	Root       string `name:"root" usage:"dink root path" default:"/var/lib/dink"`
-	RuncRoot   string `name:"runc-root" usage:"dink runc root path" default:"/run/dink"`
+	RuncRoot   string `name:"runc-root" usage:"dink runc root path" default:"/run/dink/runc"`
 	DockerData string `name:"docker-data" usage:"docker data path" default:"/var/lib/dink/docker"`
 	DockerHost string `name:"docker-host" usage:"docker daemon host" default:"tcp://127.0.0.1:2375"`
 }
@@ -49,7 +49,7 @@ func (r *ControllerCommand) Run(cmd *cobra.Command, args []string) error {
 	containerController := controllers.NewContainerController(cmd.Context(), client)
 	go containerController.Run(r.Threads, cmd.Context().Done())
 
-	podController := controllers.NewPodController(client)
+	podController := controllers.NewPodController(cmd.Context(), client)
 	go podController.Run(r.Threads, cmd.Context().Done())
 
 	<-cmd.Context().Done()

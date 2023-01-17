@@ -23,7 +23,7 @@ type ServerCommand struct {
 	KubeConfig string `name:"kube-config" usage:"kube config file path"`
 	Bind       string `name:"bind" usage:"bind address" default:"0.0.0.0:8000"`
 	Root       string `name:"root" usage:"dink root path" default:"/var/lib/dink"`
-	RuncRoot   string `name:"runc-root" usage:"dink runc root path" default:"/run/dink"`
+	RuncRoot   string `name:"runc-root" usage:"dink runc root path" default:"/run/dink/runc"`
 	DockerData string `name:"docker-data" usage:"docker data path" default:"/var/lib/dink/docker"`
 	AgentImage string `name:"agent-image" usage:"dink agent image"`
 	NFSServer  string `name:"nfs-server" usage:"nfs server address"`

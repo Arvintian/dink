@@ -31,8 +31,9 @@ type ContainerSpec struct {
 
 // ContainerStatus is the status for a Container resource
 type ContainerStatus struct {
-	State       string `json:"state"`
-	ContainerID string `json:"containerID"`
+	State       string            `json:"state"`
+	ContainerID string            `json:"containerID"`
+	PodStatus   *corev1.PodStatus `json:"podStatus"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object

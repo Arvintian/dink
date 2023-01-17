@@ -96,7 +96,7 @@ func (r *StartCommand) Run(cmd *cobra.Command, args []string) error {
 	}()
 
 	// start container
-	runc := exec.Command("runc", "--root", filepath.Join(dink.RuncRoot, "runc"), "run", "--bundle", containerRunHome, r.ID)
+	runc := exec.Command("runc", "--root", dink.RuncRoot, "run", "--bundle", containerRunHome, r.ID)
 	dupStdio(runc)
 	klog.Infof("start container %s", r.ID)
 	if err := runc.Run(); err != nil {

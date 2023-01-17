@@ -18,6 +18,6 @@ var Config ServerConfig
 
 func init() {
 	Config.Root = "/var/lib/dink"
-	Config.RuncRoot = "/run/dink"
+	Config.RuncRoot = "/run/dink/runc"
 	Config.DockerData = "/var/lib/dink/docker"
 }
