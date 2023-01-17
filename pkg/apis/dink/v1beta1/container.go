@@ -31,7 +31,7 @@ type ContainerSpec struct {
 
 // ContainerStatus is the status for a Container resource
 type ContainerStatus struct {
-	State       int32  `json:"state"`
+	State       string `json:"state"`
 	ContainerID string `json:"containerID"`
 }
 
