@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	dinkv1beta1 "dink/pkg/apis/dink/v1beta1"
 	"dink/pkg/apis/dink/v1beta1/template"
 
 	"github.com/gin-gonic/gin"
@@ -10,7 +11,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func StartContainer(c *gin.Context) {
+func StopContainer(c *gin.Context) {
 	namespace, name := c.Param("namespace"), c.Param("name")
 	client := Config.Client
 
@@ -27,31 +28,15 @@ func StartContainer(c *gin.Context) {
 		return
 	}
 
-	if container.Status.ContainerID == "" {
+	if dinkv1beta1.IsFinalState(container.Status.State) || container.Status.PodStatus == nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "container not created or init error",
+			"error": "container not is running",
 		})
 		return
 	}
 
-	if container.Status.PodStatus != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "container is running",
-		})
-		return
-	}
-
-	agentPod := template.CreatePodSepc(container, template.Config{
-		Root:       Config.Root,
-		RunRoot:    Config.RunRoot,
-		RuncRoot:   Config.RuncRoot,
-		DockerData: Config.DockerData,
-		AgentImage: Config.AgentImage,
-		NFSServer:  Config.NFSServer,
-		NFSPath:    Config.NFSPath,
-	})
-
-	if _, err := client.CoreV1().Pods(namespace).Create(c, agentPod, metav1.CreateOptions{}); err != nil {
+	thePod := template.GetPodName(container)
+	if err := client.CoreV1().Pods(namespace).Delete(c, thePod, metav1.DeleteOptions{}); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err,
 		})

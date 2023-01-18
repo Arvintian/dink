@@ -5,6 +5,7 @@ import (
 	"dink/pkg/k8s"
 	"fmt"
 
+	dingv1beta1 "dink/pkg/apis/dink/v1beta1"
 	"dink/pkg/controller"
 
 	corev1 "k8s.io/api/core/v1"
@@ -52,6 +53,14 @@ func (h *PodHandler) Reconcile(obj interface{}) (res controller.Result, err erro
 	if err == nil {
 		klog.Infof("update container %s/%s pod status %s", container.Namespace, container.Name, pod.Status.Phase)
 	}
+
+	if dingv1beta1.IsFinalState(container.Status.State) {
+		err := h.ClusterClient.CoreV1().Pods(pod.Namespace).Delete(h.Context, pod.Name, metav1.DeleteOptions{})
+		if err != nil {
+			klog.Error(err)
+		}
+	}
+
 	return res, err
 }
 
@@ -86,8 +95,8 @@ func (h *PodHandler) HandleFinalizer(obj interface{}) error {
 		return err
 	}
 	prevState := container.Status.State
-	if container.Status.State == "Running" {
-		container.Status.State = "Stopped"
+	if !dingv1beta1.IsFinalState(prevState) {
+		container.Status.State = dingv1beta1.StateStopped
 	}
 	container.Status.PodStatus = nil
 	if _, err = h.Client.DinkV1beta1().Containers(container.Namespace).UpdateStatus(h.Context, container, metav1.UpdateOptions{}); err != nil {

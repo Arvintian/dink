@@ -16,6 +16,7 @@ func CreateHTTPRouter(ctx context.Context, client k8s.Interface) *gin.Engine {
 	{
 		containers.POST("/:namespace/:name", handlers.CreateContainer)
 		containers.PUT("/:namespace/:name/start", handlers.StartContainer)
+		containers.PUT("/:namespace/:name/stop", handlers.StopContainer)
 	}
 	return router
 }

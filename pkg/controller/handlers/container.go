@@ -53,14 +53,14 @@ func (h *ContainerHandler) Reconcile(obj interface{}) (res controller.Result, er
 	if container.Status.ContainerID == "" {
 		id, err := h.createContainer(container)
 		if err != nil {
-			container.Status.State = "InitError"
+			container.Status.State = dinkv1beta1.StateInitError
 			klog.Errorf("create container %s/%s error", container.Namespace, container.Name)
 			if _, err := h.Client.DinkV1beta1().Containers(container.Namespace).UpdateStatus(h.Context, container, metav1.UpdateOptions{}); err != nil {
 				klog.Errorf("update container %s/%s status error %v", container.Namespace, container.Name, err)
 			}
 			return res, err
 		}
-		container.Status.State = "Created"
+		container.Status.State = dinkv1beta1.StateCreated
 		container.Status.ContainerID = id
 		if _, err := h.Client.DinkV1beta1().Containers(container.Namespace).UpdateStatus(h.Context, container, metav1.UpdateOptions{}); err != nil {
 			klog.Errorf("update container %s/%s status error %v", container.Namespace, container.Name, err)

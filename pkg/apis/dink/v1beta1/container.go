@@ -10,6 +10,24 @@ const (
 	ContainerPluralName = "containers"
 )
 
+const (
+	StateInit      = "Init"
+	StateInitError = "InitError"
+	StateCreated   = "Created"
+	StatePending   = "Pending"
+	StateRunning   = "Running"
+	StateFailed    = "Failed"
+	StateSucceeded = "Succeeded"
+	StateUnknown   = "Unknown"
+	StateStopped   = "Stopped"
+)
+
+const (
+	RestartPolicyAlways    = "Always"
+	RestartPolicyOnFailure = "OnFailure"
+	RestartPolicyNever     = "Never"
+)
+
 // +genclient
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
@@ -44,4 +62,14 @@ type ContainerList struct {
 	metav1.ListMeta `json:"metadata"`
 
 	Items []Container `json:"items"`
+}
+
+func IsFinalState(state string) bool {
+	finalState := []string{StateSucceeded, StateFailed}
+	for _, final := range finalState {
+		if state == final {
+			return true
+		}
+	}
+	return false
 }
