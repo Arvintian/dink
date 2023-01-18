@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dink
+  namespace: dink
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: dink
+subjects:
+  - kind: ServiceAccount
+    name: dink
+    namespace: dink
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dink-server
+  namespace: dink
+spec:
+  selector:
+    app: dink
+  ports:
+  - port: 8000
+    targetPort: 8000
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dink
+  namespace: dink
+spec:
+  selector:
+    matchLabels:
+      app: dink
+  template:
+    metadata:
+      labels:
+        app: dink
+    spec:
+      serviceAccountName: dink
+      containers:
+        - name: dink-server
+          image: arvintian/dink-bundle:10f8396
+          ports:
+            - containerPort: 8000
+              name: http
+          command:
+            - /app/server
+            - --agent-image
+            - arvintian/dink-bundle:10f8396
+            - --nfs-server
+            - dink.nfs.address
+            - --nfs-path
+            - /share/dink
+        - name: dink-controller
+          image: arvintian/dink-bundle:10f8396
+          command:
+            - /app/controller
+            - --agent-image
+            - arvintian/dink-bundle:10f8396
+            - --nfs-server
+            - dink.nfs.address
+            - --nfs-path
+            - /share/dink
+            - --docker-host
+            - tcp://127.0.0.1:2375
+          volumeMounts:
+            - name: dink-root
+              mountPath: /var/lib/dink
+              readOnly: false
+        - name: dink-dind
+          image: arvintian/dink-dind:10f8396
+          env:
+            - name: DOCKER_HOST
+              value: tcp://0.0.0.0:2375
+            - name: DOCKER_TLS_CERTDIR
+              value: ""
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: dink-root
+              mountPath: /var/lib/docker
+              readOnly: false
+              subPath: docker
+      volumes:
+        - name: dink-root
+          nfs:
+            server: dink.nfs.address
+            path: /share/dink
+            readOnly: false
