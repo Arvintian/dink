@@ -23,9 +23,10 @@ const (
 )
 
 const (
-	RestartPolicyAlways    = "Always"
-	RestartPolicyOnFailure = "OnFailure"
-	RestartPolicyNever     = "Never"
+	RestartPolicyAlways        = "Always"
+	RestartPolicyOnFailure     = "OnFailure"
+	RestartPolicyUnlessStopped = "UnlessStopped"
+	RestartPolicyNever         = "Never"
 )
 
 // +genclient
@@ -65,7 +66,7 @@ type ContainerList struct {
 }
 
 func IsFinalState(state string) bool {
-	finalState := []string{StateSucceeded, StateFailed}
+	finalState := []string{StateSucceeded, StateFailed, StateStopped}
 	for _, final := range finalState {
 		if state == final {
 			return true

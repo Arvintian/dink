@@ -17,8 +17,13 @@ type ControllerCommand struct {
 	KubeConfig string `name:"kube-config" usage:"kube config file path"`
 	Threads    int    `name:"threads" usage:"controller workers number" default:"2"`
 	Root       string `name:"root" usage:"dink root path" default:"/var/lib/dink"`
+	RunRoot    string `name:"run-root" usage:"dink runc root path" default:"/run/dink"`
+	RuncRoot   string `name:"runc-root" usage:"dink runc root path" default:"/run/dink/runc"`
 	DockerData string `name:"docker-data" usage:"docker data path" default:"/var/lib/dink/docker"`
 	DockerHost string `name:"docker-host" usage:"docker daemon host" default:"tcp://127.0.0.1:2375"`
+	AgentImage string `name:"agent-image" usage:"dink agent image"`
+	NFSServer  string `name:"nfs-server" usage:"nfs server address"`
+	NFSPath    string `name:"nfs-path" usage:"nfs mount path"`
 }
 
 var dink ControllerCommand
@@ -29,8 +34,13 @@ func (r *ControllerCommand) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	controller.Config.Root = dink.Root
+	controller.Config.RunRoot = r.RunRoot
+	controller.Config.RuncRoot = r.RuncRoot
 	controller.Config.DockerData = dink.DockerData
 	controller.Config.DockerHost = dink.DockerHost
+	controller.Config.AgentImage = r.AgentImage
+	controller.Config.NFSServer = r.NFSServer
+	controller.Config.NFSPath = r.NFSPath
 
 	clientConfig, err := k8s.GetKubeConfig(r.KubeConfig)
 	if err != nil {

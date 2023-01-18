@@ -47,21 +47,25 @@ func (h *PodHandler) Reconcile(obj interface{}) (res controller.Result, err erro
 		return res, err
 	}
 
-	container.Status.State = string(pod.Status.Phase)
-	container.Status.PodStatus = &pod.Status
-	_, err = h.Client.DinkV1beta1().Containers(container.Namespace).UpdateStatus(h.Context, container, metav1.UpdateOptions{})
-	if err == nil {
-		klog.Infof("update container %s/%s pod status %s", container.Namespace, container.Name, pod.Status.Phase)
+	if dingv1beta1.IsFinalState(string(pod.Status.Phase)) {
+		defer func() {
+			err := h.ClusterClient.CoreV1().Pods(pod.Namespace).Delete(h.Context, pod.Name, metav1.DeleteOptions{})
+			if err != nil {
+				klog.Error(err)
+			}
+		}()
 	}
 
-	if dingv1beta1.IsFinalState(container.Status.State) {
-		err := h.ClusterClient.CoreV1().Pods(pod.Namespace).Delete(h.Context, pod.Name, metav1.DeleteOptions{})
-		if err != nil {
-			klog.Error(err)
+	if container.Status.PodStatus == nil || container.Status.State != string(pod.Status.Phase) {
+		container.Status.State = string(pod.Status.Phase)
+		container.Status.PodStatus = &pod.Status
+		_, err = h.Client.DinkV1beta1().Containers(container.Namespace).UpdateStatus(h.Context, container, metav1.UpdateOptions{})
+		if err == nil {
+			klog.Infof("update container %s/%s pod status %s", container.Namespace, container.Name, pod.Status.Phase)
 		}
+		return res, err
 	}
-
-	return res, err
+	return res, nil
 }
 
 func (h *PodHandler) AddFinalizer(obj interface{}) (bool, error) {
@@ -95,6 +99,8 @@ func (h *PodHandler) HandleFinalizer(obj interface{}) error {
 		return err
 	}
 	prevState := container.Status.State
+	// If delete running pod, represent stop the container.
+	// Reconcile will not recieve the pod final state event after handle finalizer.
 	if !dingv1beta1.IsFinalState(prevState) {
 		container.Status.State = dingv1beta1.StateStopped
 	}
