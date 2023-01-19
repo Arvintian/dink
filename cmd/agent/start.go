@@ -15,11 +15,7 @@ import (
 )
 
 type StartCommand struct {
-	ID         string   `name:"id" usage:"container's id"`
-	Env        []string `name:"env" usage:"container's env"`
-	WorkingDir string   `name:"workingdir" usage:"container's workingdir"`
-	Cmd        []string `name:"cmd" usage:"container's cmd"`
-	TTY        bool     `name:"tty" usage:"container's tty open"`
+	ID string `name:"id" usage:"container's id"`
 }
 
 func (r *StartCommand) Run(cmd *cobra.Command, args []string) error {
@@ -41,28 +37,7 @@ func (r *StartCommand) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	// runc config
-	runcConfig := createRuntimeConfig()
-	runcConfig.Process.Args = append(runcConfig.Process.Args, dockerConfig.Config.Entrypoint...)
-	runcConfig.Process.Args = append(runcConfig.Process.Args, dockerConfig.Config.Cmd...)
-	runcConfig.Process.Env = append(runcConfig.Process.Env, dockerConfig.Config.Env...)
-	if dockerConfig.Config.WorkingDir != "" {
-		runcConfig.Process.Cwd = dockerConfig.Config.WorkingDir
-	}
-	runcConfig.Process.Terminal = dockerConfig.Config.Tty
-	runcConfig.Hostname = dockerConfig.Config.Hostname
-	runcConfig.Root.Path = filepath.Join(containerRunHome, "rootfs")
-
-	if len(r.Cmd) > 0 {
-		runcConfig.Process.Args = r.Cmd
-	}
-	runcConfig.Process.Env = append(runcConfig.Process.Env, r.Env...)
-	if r.WorkingDir != "" {
-		runcConfig.Process.Cwd = r.WorkingDir
-	}
-	if r.TTY {
-		runcConfig.Process.Terminal = true
-	}
-	bts, err = json.Marshal(runcConfig)
+	bts, err = os.ReadFile(filepath.Join(containerHome, "config.json"))
 	if err != nil {
 		return err
 	}

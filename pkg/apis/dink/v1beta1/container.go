@@ -43,9 +43,11 @@ type Container struct {
 
 // ContainerSpec is the spec for a Container resource
 type ContainerSpec struct {
-	HostName      string           `json:"hostname"`
-	RestartPolicy string           `json:"restartPolicy"`
-	Template      corev1.Container `json:"template"`
+	HostName      string            `json:"hostname"`
+	RestartPolicy string            `json:"restartPolicy"`
+	NodeSelector  map[string]string `json:"nodeSelector"`
+	Template      corev1.Container  `json:"template"`
+	Volumes       []corev1.Volume   `json:"volumes"`
 }
 
 // ContainerStatus is the status for a Container resource

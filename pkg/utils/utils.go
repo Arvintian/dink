@@ -1,6 +1,9 @@
 package utils
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+	"encoding/json"
 	"io"
 	"io/fs"
 	"os"
@@ -85,4 +88,11 @@ func CopyFile(src, dst string) error {
 	}
 
 	return out.Close()
+}
+
+func ObjectMD5(object interface{}) string {
+	md5Ctx := md5.New()
+	data, _ := json.Marshal(object)
+	md5Ctx.Write(data)
+	return hex.EncodeToString(md5Ctx.Sum(nil))
 }

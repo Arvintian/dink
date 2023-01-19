@@ -1,26 +1,70 @@
-package main
+package template
 
 import (
 	"encoding/json"
+	"fmt"
 
+	dinkv1beta1 "dink/pkg/apis/dink/v1beta1"
+
+	"github.com/docker/docker/api/types"
 	spec "github.com/opencontainers/runtime-spec/specs-go"
 )
 
-func createRuntimeConfig() spec.Spec {
+func GetHostName(container *dinkv1beta1.Container) string {
+	return container.Status.ContainerID[:12]
+}
+
+func CreateRuntimeConfig(container *dinkv1beta1.Container, image types.ImageInspect) spec.Spec {
 	var config spec.Spec
 	if err := json.Unmarshal([]byte(runtimeSpec), &config); err != nil {
 		panic(err)
 	}
+	config.Process.Env = append(config.Process.Env, image.Config.Env...)
+	config.Process.Args = append(config.Process.Args, image.Config.Entrypoint...)
+	config.Process.Args = append(config.Process.Args, image.Config.Cmd...)
+	if image.Config.WorkingDir != "" {
+		config.Process.Cwd = image.Config.WorkingDir
+	}
+
+	config.Hostname = GetHostName(container)
+	if container.Spec.HostName != "" {
+		config.Hostname = container.Spec.HostName
+	}
+	envs := []string{}
+	for _, item := range container.Spec.Template.Env {
+		envs = append(envs, fmt.Sprintf("%s=%s", item.Name, item.Value))
+	}
+	config.Process.Env = append(config.Process.Env, envs...)
+	if container.Spec.Template.WorkingDir != "" {
+		config.Process.Cwd = container.Spec.Template.WorkingDir
+	}
+	if len(container.Spec.Template.Command) > 0 {
+		config.Process.Args = container.Spec.Template.Command
+		config.Process.Args = append(config.Process.Args, container.Spec.Template.Args...)
+	}
+	config.Process.Terminal = container.Spec.Template.TTY
+	for _, vol := range container.Spec.Template.VolumeMounts {
+		config.Mounts = append(config.Mounts, spec.Mount{
+			Destination: vol.MountPath,
+			Source:      vol.MountPath,
+			Type:        "bind",
+			Options:     []string{"rbind", "rprivate"},
+		})
+	}
+
 	return config
 }
 
 var runtimeSpec = `
 {
-    "ociVersion": "1.0.2",
+    "ociVersion": "1.0.2-dev",
     "process": {
         "user": {
             "uid": 0,
-            "gid": 0
+            "gid": 0,
+			"additionalGids": [
+                0
+            ]
         },
         "args": [],
         "env": [],
@@ -402,6 +446,9 @@ var runtimeSpec = `
                         "io_uring_setup",
                         "ipc",
                         "kill",
+						"landlock_add_rule",
+                        "landlock_create_ruleset",
+                        "landlock_restrict_self",
                         "lchown",
                         "lchown32",
                         "lgetxattr",
@@ -419,6 +466,7 @@ var runtimeSpec = `
                         "madvise",
                         "membarrier",
                         "memfd_create",
+						"memfd_secret",
                         "mincore",
                         "mkdir",
                         "mkdirat",
@@ -466,6 +514,7 @@ var runtimeSpec = `
                         "preadv",
                         "preadv2",
                         "prlimit64",
+						"process_mrelease",
                         "pselect6",
                         "pselect6_time64",
                         "pwrite64",
@@ -620,6 +669,19 @@ var runtimeSpec = `
                         "ptrace"
                     ],
                     "action": "SCMP_ACT_ALLOW"
+                },
+				{
+                    "names": [
+                        "socket"
+                    ],
+                    "action": "SCMP_ACT_ALLOW",
+                    "args": [
+                        {
+                            "index": 0,
+                            "value": 40,
+                            "op": "SCMP_CMP_NE"
+                        }
+                    ]
                 },
                 {
                     "names": [

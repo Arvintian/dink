@@ -5,8 +5,9 @@ import (
 )
 
 const (
-	LabelPodCreatedBy = "pod.kubernetes.io/created-by"
-	DinkCreator       = "dink"
+	LabelPodCreatedBy  = "pod.kubernetes.io/created-by"
+	AnnotationSpecHash = "spec.dink.io/hash"
+	DinkCreator        = "dink"
 )
 
 func PodSelector() string {

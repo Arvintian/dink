@@ -62,12 +62,35 @@ func (h *ContainerHandler) Reconcile(obj interface{}) (res controller.Result, er
 			}
 			return res, err
 		}
-		container.Status.State = dinkv1beta1.StateCreated
+		container.Status.State = dinkv1beta1.StateInit
 		container.Status.ContainerID = id
 		if _, err := h.Client.DinkV1beta1().Containers(container.Namespace).UpdateStatus(h.Context, container, metav1.UpdateOptions{}); err != nil {
 			klog.Errorf("update container %s/%s status error %v", container.Namespace, container.Name, err)
 		}
 		klog.Infof("create container %s/%s success", container.Namespace, container.Name)
+		return res, err
+	}
+
+	currentHash := utils.ObjectMD5(container.Spec)
+	if prevHash, ok := container.Annotations[controller.AnnotationSpecHash]; !ok || prevHash != currentHash {
+		err = h.createRuntimeConfig(container)
+		if err != nil {
+			return res, err
+		}
+		if container.Annotations == nil {
+			container.Annotations = map[string]string{
+				controller.AnnotationSpecHash: utils.ObjectMD5(container.Spec),
+			}
+		} else {
+			container.Annotations[controller.AnnotationSpecHash] = utils.ObjectMD5(container.Spec)
+		}
+		if container.Status.State == dinkv1beta1.StateInit {
+			container.Status.State = dinkv1beta1.StateCreated
+		}
+		_, err := h.Client.DinkV1beta1().Containers(container.Namespace).Update(h.Context, container, metav1.UpdateOptions{})
+		if err == nil {
+			klog.Infof("create container runtime config %s/%s success", container.Namespace, container.Name)
+		}
 		return res, err
 	}
 
@@ -104,19 +127,6 @@ func (h *ContainerHandler) createContainer(c *dinkv1beta1.Container) (string, er
 	if err != nil {
 		return "", err
 	}
-	envs := []string{}
-	for _, item := range c.Spec.Template.Env {
-		envs = append(envs, fmt.Sprintf("%s=%s", item.Name, item.Value))
-	}
-	config := &container.Config{
-		Image:      c.Spec.Template.Image,
-		Hostname:   c.Spec.HostName,
-		Env:        envs,
-		WorkingDir: c.Spec.Template.WorkingDir,
-		Entrypoint: c.Spec.Template.Command,
-		Cmd:        c.Spec.Template.Args,
-		Tty:        c.Spec.Template.TTY,
-	}
 
 	// image pull
 	filter := filters.NewArgs()
@@ -136,11 +146,12 @@ func (h *ContainerHandler) createContainer(c *dinkv1beta1.Container) (string, er
 		io.Copy(os.Stdout, out)
 	}
 
-	// create container
-	createRsp, err := dockerCli.ContainerCreate(h.Context, config, nil, nil, nil, fmt.Sprintf("%s-%s", c.Namespace, c.Name))
+	// create container layers
+	createRsp, err := dockerCli.ContainerCreate(h.Context, &container.Config{Image: c.Spec.Template.Image}, nil, nil, nil, fmt.Sprintf("%s-%s", c.Namespace, c.Name))
 	if err != nil {
 		return "", err
 	}
+
 	inspectRsp, err := dockerCli.ContainerInspect(h.Context, createRsp.ID)
 	if err != nil {
 		return "", err
@@ -151,6 +162,7 @@ func (h *ContainerHandler) createContainer(c *dinkv1beta1.Container) (string, er
 		return "", err
 	}
 
+	// create runtime config
 	bts, err := json.Marshal(inspectRsp)
 	if err != nil {
 		return "", err
@@ -158,7 +170,30 @@ func (h *ContainerHandler) createContainer(c *dinkv1beta1.Container) (string, er
 	if err := utils.WriteBytesToFile(bts, filepath.Join(containerHome, "docker.json")); err != nil {
 		return "", err
 	}
+
 	return createRsp.ID, nil
+}
+
+func (h *ContainerHandler) createRuntimeConfig(c *dinkv1beta1.Container) error {
+	dockerCli, err := client.NewClientWithOpts(client.WithHost(controller.Config.DockerHost), client.WithAPIVersionNegotiation())
+	if err != nil {
+		return err
+	}
+	inspectRsp, err := dockerCli.ContainerInspect(h.Context, c.Status.ContainerID)
+	if err != nil {
+		return err
+	}
+	image, _, err := dockerCli.ImageInspectWithRaw(h.Context, inspectRsp.Config.Image)
+	if err != nil {
+		return err
+	}
+	containerHome := filepath.Join(controller.Config.Root, "containers", c.Status.ContainerID)
+	runtimeConfig := template.CreateRuntimeConfig(c, image)
+	bts, err := json.Marshal(runtimeConfig)
+	if err != nil {
+		return err
+	}
+	return utils.WriteBytesToFile(bts, filepath.Join(containerHome, "config.json"))
 }
 
 func (h *ContainerHandler) AddFinalizer(obj interface{}) (bool, error) {

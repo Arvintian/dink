@@ -26,12 +26,37 @@ func GetPodName(container *dinkv1beta1.Container) string {
 
 func CreatePodSepc(container *dinkv1beta1.Container, cfg Config) *corev1.Pod {
 	privileged := true
+	labels := map[string]string{
+		controller.LabelPodCreatedBy: controller.DinkCreator,
+	}
+	for k, v := range container.Labels {
+		labels[k] = v
+	}
+	volumes := []corev1.Volume{
+		{
+			Name: "dink-root",
+			VolumeSource: corev1.VolumeSource{
+				NFS: &corev1.NFSVolumeSource{
+					Server:   cfg.NFSServer,
+					Path:     cfg.NFSPath,
+					ReadOnly: false,
+				},
+			},
+		},
+	}
+	volumes = append(volumes, container.Spec.Volumes...)
+	volumeMounts := []corev1.VolumeMount{
+		{
+			Name:      "dink-root",
+			ReadOnly:  false,
+			MountPath: cfg.Root,
+		},
+	}
+	volumeMounts = append(volumeMounts, container.Spec.Template.VolumeMounts...)
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: GetPodName(container),
-			Labels: map[string]string{
-				controller.LabelPodCreatedBy: controller.DinkCreator,
-			},
+			Name:   GetPodName(container),
+			Labels: labels,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion: dinkv1beta1.APIVersion,
@@ -45,6 +70,7 @@ func CreatePodSepc(container *dinkv1beta1.Container, cfg Config) *corev1.Pod {
 			RestartPolicy: corev1.RestartPolicyNever,
 			DNSPolicy:     corev1.DNSClusterFirst,
 			Hostname:      container.Spec.HostName,
+			NodeSelector:  container.Spec.NodeSelector,
 			Containers: []corev1.Container{
 				{
 					Name:  "dink-agent",
@@ -85,27 +111,10 @@ func CreatePodSepc(container *dinkv1beta1.Container, cfg Config) *corev1.Pod {
 					SecurityContext: &corev1.SecurityContext{
 						Privileged: &privileged,
 					},
-					VolumeMounts: []corev1.VolumeMount{
-						{
-							Name:      "dink-root",
-							ReadOnly:  false,
-							MountPath: cfg.Root,
-						},
-					},
+					VolumeMounts: volumeMounts,
 				},
 			},
-			Volumes: []corev1.Volume{
-				{
-					Name: "dink-root",
-					VolumeSource: corev1.VolumeSource{
-						NFS: &corev1.NFSVolumeSource{
-							Server:   cfg.NFSServer,
-							Path:     cfg.NFSPath,
-							ReadOnly: false,
-						},
-					},
-				},
-			},
+			Volumes: volumes,
 		},
 	}
 
