@@ -3,6 +3,7 @@ package main
 import (
 	"dink/pkg/utils"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -19,6 +20,21 @@ type StartCommand struct {
 }
 
 func (r *StartCommand) Run(cmd *cobra.Command, args []string) error {
+	if err := utils.CreateDir(dink.Root, 0755); err != nil {
+		return err
+	}
+	nfs := exec.Command("mount", "-t", "nfs", "-o", "vers=3,timeo=600,retrans=10,intr,nolock", fmt.Sprintf("%s:%s", dink.NFSServer, dink.NFSPath), dink.Root)
+	dupStdio(nfs)
+	if err := nfs.Run(); err != nil {
+		return err
+	}
+	defer func() {
+		if err := syscall.Unmount(dink.Root, 0); err != nil {
+			klog.Errorf("umount %s error %v", dink.Root, err)
+		}
+		klog.Infof("unmount %s", dink.Root)
+	}()
+
 	containerHome := filepath.Join(dink.Root, "containers", r.ID)
 	containerRunHome := filepath.Join(dink.RunRoot, r.ID)
 	containerRunRootFS := filepath.Join(containerRunHome, "rootfs")

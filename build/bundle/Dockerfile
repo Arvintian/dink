@@ -1,6 +1,6 @@
-FROM ubuntu:22.04
+FROM alpine:3.17
 
-RUN apt update && apt install -y runc fuse-overlayfs
+RUN apk update && apk add fuse-overlayfs runc nfs-utils
 
 COPY dist/ /app/
 WORKDIR /app

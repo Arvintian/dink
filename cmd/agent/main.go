@@ -15,6 +15,8 @@ type AgentCommand struct {
 	RunRoot    string `name:"run-root" usage:"dink root path" default:"/run/dink"`
 	RuncRoot   string `name:"runc-root" usage:"dink runc root path" default:"/run/dink/runc"`
 	DockerData string `name:"docker-data" usage:"docker data path" default:"/var/lib/dink/docker"`
+	NFSServer  string `name:"nfs-server" usage:"nfs server address"`
+	NFSPath    string `name:"nfs-path" usage:"nfs mount path"`
 }
 
 var dink AgentCommand

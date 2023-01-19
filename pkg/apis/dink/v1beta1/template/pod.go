@@ -32,27 +32,6 @@ func CreatePodSepc(container *dinkv1beta1.Container, cfg Config) *corev1.Pod {
 	for k, v := range container.Labels {
 		labels[k] = v
 	}
-	volumes := []corev1.Volume{
-		{
-			Name: "dink-root",
-			VolumeSource: corev1.VolumeSource{
-				NFS: &corev1.NFSVolumeSource{
-					Server:   cfg.NFSServer,
-					Path:     cfg.NFSPath,
-					ReadOnly: false,
-				},
-			},
-		},
-	}
-	volumes = append(volumes, container.Spec.Volumes...)
-	volumeMounts := []corev1.VolumeMount{
-		{
-			Name:      "dink-root",
-			ReadOnly:  false,
-			MountPath: cfg.Root,
-		},
-	}
-	volumeMounts = append(volumeMounts, container.Spec.Template.VolumeMounts...)
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   GetPodName(container),
@@ -85,6 +64,10 @@ func CreatePodSepc(container *dinkv1beta1.Container, cfg Config) *corev1.Pod {
 						cfg.RuncRoot,
 						"--docker-data",
 						cfg.DockerData,
+						"--nfs-server",
+						cfg.NFSServer,
+						"--nfs-path",
+						cfg.NFSPath,
 						"start",
 						"--id",
 						container.Status.ContainerID,
@@ -111,10 +94,10 @@ func CreatePodSepc(container *dinkv1beta1.Container, cfg Config) *corev1.Pod {
 					SecurityContext: &corev1.SecurityContext{
 						Privileged: &privileged,
 					},
-					VolumeMounts: volumeMounts,
+					VolumeMounts: container.Spec.Template.VolumeMounts,
 				},
 			},
-			Volumes: volumes,
+			Volumes: container.Spec.Volumes,
 		},
 	}
 
