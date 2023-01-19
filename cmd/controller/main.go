@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/Arvintian/go-utils/cmdutil"
+	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
 )
 
@@ -44,6 +45,14 @@ func (r *ControllerCommand) Run(cmd *cobra.Command, args []string) error {
 
 	clientConfig, err := k8s.GetKubeConfig(r.KubeConfig)
 	if err != nil {
+		return err
+	}
+
+	dockerCli, err := client.NewClientWithOpts(client.WithHost(controller.Config.DockerHost), client.WithAPIVersionNegotiation())
+	if err != nil {
+		return err
+	}
+	if _, err := dockerCli.Ping(cmd.Context()); err != nil {
 		return err
 	}
 
