@@ -30,6 +30,12 @@ images: build
 	    -f $(BUILD_DIR)/$${image}/$(DOCKERFILE) .;                                    \
 	done
 
+push:
+	for image in $(IMAGES); do                                                        \
+	  imageName=$(IMAGE_PREFIX)$${image/\//-}$(IMAGE_SUFFIX);                         \
+	  docker push ${REGISTRY}/$${imageName}:$(GIT_VERSION);                           \
+	done
+
 code-gen:
 	go mod vendor
 	rm -rf pkg/apis/dink/v1beta1/*.deepcopy.go
