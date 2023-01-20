@@ -5,6 +5,7 @@ import (
 	"dink/pkg/k8s"
 	"reflect"
 
+	dingv1beta1 "dink/pkg/apis/dink/v1beta1"
 	"dink/pkg/controller"
 	"dink/pkg/controller/handlers"
 
@@ -20,7 +21,7 @@ func NewPodController(ctx context.Context, client k8s.Interface) *controller.Con
 		client,
 		controller.Config.ResyncPeriods,
 		informers.WithTweakListOptions(func(options *metav1.ListOptions) {
-			options.LabelSelector = controller.PodSelector()
+			options.LabelSelector = dingv1beta1.PodSelector()
 		}),
 	)
 

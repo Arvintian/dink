@@ -1,7 +1,6 @@
 package template
 
 import (
-	"dink/pkg/controller"
 	"fmt"
 
 	dinkv1beta1 "dink/pkg/apis/dink/v1beta1"
@@ -27,7 +26,7 @@ func GetPodName(container *dinkv1beta1.Container) string {
 func CreatePodSepc(container *dinkv1beta1.Container, cfg Config) *corev1.Pod {
 	privileged := true
 	labels := map[string]string{
-		controller.LabelPodCreatedBy: controller.DinkCreator,
+		dinkv1beta1.LabelPodCreatedBy: dinkv1beta1.DinkCreator,
 	}
 	for k, v := range container.Labels {
 		labels[k] = v

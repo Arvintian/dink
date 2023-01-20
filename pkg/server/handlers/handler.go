@@ -1,18 +1,13 @@
 package handlers
 
 import (
+	"dink/pkg/apis/dink/v1beta1/template"
 	"dink/pkg/k8s"
 )
 
 type ServerConfig struct {
-	Root       string
-	RunRoot    string
-	RuncRoot   string
-	DockerData string
-	AgentImage string
-	NFSServer  string
-	NFSPath    string
-	Client     k8s.Interface
+	Client k8s.Interface
+	template.Config
 }
 
 var Config ServerConfig

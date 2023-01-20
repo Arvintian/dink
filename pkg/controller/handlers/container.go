@@ -72,17 +72,17 @@ func (h *ContainerHandler) Reconcile(obj interface{}) (res controller.Result, er
 	}
 
 	currentHash := utils.ObjectMD5(container.Spec)
-	if prevHash, ok := container.Annotations[controller.AnnotationSpecHash]; !ok || prevHash != currentHash {
+	if prevHash, ok := container.Annotations[dinkv1beta1.AnnotationSpecHash]; !ok || prevHash != currentHash {
 		err = h.createRuntimeConfig(container)
 		if err != nil {
 			return res, err
 		}
 		if container.Annotations == nil {
 			container.Annotations = map[string]string{
-				controller.AnnotationSpecHash: utils.ObjectMD5(container.Spec),
+				dinkv1beta1.AnnotationSpecHash: utils.ObjectMD5(container.Spec),
 			}
 		} else {
-			container.Annotations[controller.AnnotationSpecHash] = utils.ObjectMD5(container.Spec)
+			container.Annotations[dinkv1beta1.AnnotationSpecHash] = utils.ObjectMD5(container.Spec)
 		}
 		if container.Status.State == dinkv1beta1.StateInit {
 			container.Status.State = dinkv1beta1.StateCreated

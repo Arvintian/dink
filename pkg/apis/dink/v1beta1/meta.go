@@ -1,4 +1,4 @@
-package controller
+package v1beta1
 
 import (
 	"fmt"
