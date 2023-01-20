@@ -26,8 +26,8 @@ spec:
   selector:
     app: dink
   ports:
-  - port: 8000
-    targetPort: 8000
+    - port: 8000
+      targetPort: 8000
   type: NodePort
 ---
 apiVersion: apps/v1
@@ -46,37 +46,62 @@ spec:
     spec:
       serviceAccountName: dink
       containers:
-        - name: dink-server
-          image: arvintian/dink-bundle:10f8396
+        - name: dinkd
+          image: arvintian/dink-bundle:eec45f2
           ports:
             - containerPort: 8000
               name: http
           command:
-            - /app/server
+            - /app/play
             - --agent-image
-            - arvintian/dink-bundle:10f8396
-            - --nfs-server
-            - dink.nfs.address
-            - --nfs-path
-            - /share/dink
-        - name: dink-controller
-          image: arvintian/dink-bundle:10f8396
-          command:
-            - /app/controller
-            - --agent-image
-            - arvintian/dink-bundle:10f8396
+            - arvintian/dink-bundle:eec45f2
             - --nfs-server
             - dink.nfs.address
             - --nfs-path
             - /share/dink
             - --docker-host
-            - tcp://127.0.0.1:2375
+            - tcp://dink-dind:2375
           volumeMounts:
             - name: dink-root
               mountPath: /var/lib/dink
-              readOnly: false
+      volumes:
+        - name: dink-root
+          persistentVolumeClaim:
+            claimName: dink-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dink-dind
+  namespace: dink
+spec:
+  selector:
+    app: dink-dind
+  ports:
+    - port: 2375
+      targetPort: 2375
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dink-dind
+  namespace: dink
+spec:
+  selector:
+    matchLabels:
+      app: dink-dind
+  template:
+    metadata:
+      labels:
+        app: dink-dind
+    spec:
+      serviceAccountName: dink
+      containers:
         - name: dink-dind
-          image: arvintian/dink-dind:10f8396
+          image: arvintian/dink-dind:eec45f2
+          ports:
+            - containerPort: 2375
           env:
             - name: DOCKER_HOST
               value: tcp://0.0.0.0:2375
@@ -87,11 +112,43 @@ spec:
           volumeMounts:
             - name: dink-root
               mountPath: /var/lib/docker
-              readOnly: false
               subPath: docker
       volumes:
         - name: dink-root
-          nfs:
-            server: dink.nfs.address
-            path: /share/dink
-            readOnly: false
+          persistentVolumeClaim:
+            claimName: dink-pvc
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dink-pvc
+  namespace: dink
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 50Gi
+  volumeMode: Filesystem
+  volumeName: dink-pv
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: dink-pv
+spec:
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 50Gi
+  nfs:
+    server: dink.nfs.address
+    path: /share/dink
+  mountOptions:
+    - vers=3
+    - timeo=600
+    - retrans=10
+    - intr
+    - nolock
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
