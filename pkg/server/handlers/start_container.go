@@ -49,6 +49,7 @@ func StartContainer(c *gin.Context) {
 		AgentImage: Config.AgentImage,
 		NFSServer:  Config.NFSServer,
 		NFSPath:    Config.NFSPath,
+		NFSOptions: Config.NFSOptions,
 	})
 
 	if _, err := client.CoreV1().Pods(namespace).Create(c, agentPod, metav1.CreateOptions{}); err != nil {

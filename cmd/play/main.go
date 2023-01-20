@@ -26,6 +26,7 @@ type DinkCommand struct {
 	AgentImage string `name:"agent-image" usage:"dink agent image"`
 	NFSServer  string `name:"nfs-server" usage:"nfs server address"`
 	NFSPath    string `name:"nfs-path" usage:"nfs mount path"`
+	NFSOptions string `name:"nfs-options" usage:"nfs mount options" default:"vers=3,timeo=600,retrans=10,intr,nolock"`
 }
 
 func (r *DinkCommand) Run(cmd *cobra.Command, args []string) error {
@@ -44,6 +45,7 @@ func (r *DinkCommand) Run(cmd *cobra.Command, args []string) error {
 		AgentImage: r.AgentImage,
 		NFSServer:  r.NFSServer,
 		NFSPath:    r.NFSPath,
+		NFSOptions: r.NFSOptions,
 	}
 	go func() {
 		if err := controller.Run(cmd, args); err != nil {
@@ -61,6 +63,7 @@ func (r *DinkCommand) Run(cmd *cobra.Command, args []string) error {
 		AgentImage: r.AgentImage,
 		NFSServer:  r.NFSServer,
 		NFSPath:    r.NFSPath,
+		NFSOptions: r.NFSOptions,
 	}
 	go func() {
 		if err := server.Run(cmd, args); err != nil {

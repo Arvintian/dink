@@ -12,12 +12,3 @@ type ControllerConfig struct {
 }
 
 var Config ControllerConfig
-
-func init() {
-	Config.ResyncPeriods = 15 * 60 * time.Second
-	Config.DockerHost = "tcp://127.0.0.1:2375"
-	Config.Root = "/var/lib/dink"
-	Config.RunRoot = "/run/dink"
-	Config.RuncRoot = "/run/dink/runc"
-	Config.DockerData = "/var/lib/dink/docker"
-}

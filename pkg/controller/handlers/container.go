@@ -110,6 +110,7 @@ func (h *ContainerHandler) Reconcile(obj interface{}) (res controller.Result, er
 				AgentImage: controller.Config.AgentImage,
 				NFSServer:  controller.Config.NFSServer,
 				NFSPath:    controller.Config.NFSPath,
+				NFSOptions: controller.Config.NFSOptions,
 			})
 			if _, err := h.Client.CoreV1().Pods(co.Namespace).Create(h.Context, agentPod, metav1.CreateOptions{}); err != nil {
 				klog.Errorf("restart container %s/%s error %v", container.Namespace, container.Name, err)

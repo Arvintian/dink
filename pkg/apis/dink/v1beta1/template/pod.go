@@ -17,6 +17,7 @@ type Config struct {
 	AgentImage string
 	NFSServer  string
 	NFSPath    string
+	NFSOptions string
 }
 
 func GetPodName(container *dinkv1beta1.Container) string {
@@ -65,6 +66,8 @@ func CreatePodSepc(container *dinkv1beta1.Container, cfg Config) *corev1.Pod {
 						cfg.DockerData,
 						"--nfs-server",
 						cfg.NFSServer,
+						"--nfs-options",
+						cfg.NFSOptions,
 						"--nfs-path",
 						cfg.NFSPath,
 						"start",

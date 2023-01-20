@@ -23,7 +23,7 @@ func (r *StartCommand) Run(cmd *cobra.Command, args []string) error {
 	if err := utils.CreateDir(dink.Root, 0755); err != nil {
 		return err
 	}
-	nfs := exec.Command("mount", "-t", "nfs", "-o", "vers=3,timeo=600,retrans=10,intr,nolock", fmt.Sprintf("%s:%s", dink.NFSServer, dink.NFSPath), dink.Root)
+	nfs := exec.Command("mount", "-t", "nfs", "-o", dink.NFSOptions, fmt.Sprintf("%s:%s", dink.NFSServer, dink.NFSPath), dink.Root)
 	dupStdio(nfs)
 	if err := nfs.Run(); err != nil {
 		return err

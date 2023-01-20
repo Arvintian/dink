@@ -24,6 +24,7 @@ type ServerCommand struct {
 	AgentImage string `name:"agent-image" usage:"dink agent image"`
 	NFSServer  string `name:"nfs-server" usage:"nfs server address"`
 	NFSPath    string `name:"nfs-path" usage:"nfs mount path"`
+	NFSOptions string `name:"nfs-options" usage:"nfs mount options" default:"vers=3,timeo=600,retrans=10,intr,nolock"`
 }
 
 func (r *ServerCommand) Run(cmd *cobra.Command, args []string) error {
@@ -34,6 +35,7 @@ func (r *ServerCommand) Run(cmd *cobra.Command, args []string) error {
 	handlers.Config.AgentImage = r.AgentImage
 	handlers.Config.NFSServer = r.NFSServer
 	handlers.Config.NFSPath = r.NFSPath
+	handlers.Config.NFSOptions = r.NFSOptions
 	client, err := k8s.GetClient(r.KubeConfig)
 	if err != nil {
 		return err

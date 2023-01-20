@@ -17,6 +17,7 @@ type AgentCommand struct {
 	DockerData string `name:"docker-data" usage:"docker data path" default:"/var/lib/dink/docker"`
 	NFSServer  string `name:"nfs-server" usage:"nfs server address"`
 	NFSPath    string `name:"nfs-path" usage:"nfs mount path"`
+	NFSOptions string `name:"nfs-options" usage:"nfs mount options"`
 }
 
 var dink AgentCommand
