@@ -44,6 +44,13 @@ func (r *StartCommand) Run(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(rsp.StatusCode, res)
+	if rsp.StatusCode == 200 {
+		fmt.Printf("Starting container %s\n", args[0])
+	} else {
+		fmt.Println(res)
+		serverProxy.Process.Kill()
+		serverProxy.Wait()
+		os.Exit(-1)
+	}
 	return nil
 }

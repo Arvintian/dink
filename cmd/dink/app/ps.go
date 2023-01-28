@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -25,7 +26,8 @@ func (r *PsCommand) Run(cmd *cobra.Command, args []string) error {
 	if r.Namespace != "" {
 		runArgs = append(runArgs, "--namespace", r.Namespace)
 	}
-	runArgs = append(runArgs, "get", "container", "-o", "custom-columns=NAME:.metadata.name,STATE:.status.state,CREATED:.metadata.creationTimestamp")
+	columns := "NAME:.metadata.name,IMAGE:.spec.template.image,IP:.status.podStatus.podIP,HOST:.status.podStatus.hostIP,CREATED:.metadata.creationTimestamp,STATE:.status.state"
+	runArgs = append(runArgs, "get", "container", "-o", fmt.Sprintf("custom-columns=%s", columns))
 	kubectl := exec.Command(self, runArgs...)
 	dupStdio(kubectl)
 	return kubectl.Run()
