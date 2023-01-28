@@ -20,5 +20,8 @@ func CreateHTTPRouter(ctx context.Context, client k8s.Interface) *gin.Engine {
 		containers.PUT("/:namespace/:name/stop", handlers.StopContainer)
 		containers.DELETE("/:namespace/:name", handlers.RemoveContainer)
 	}
+	router.GET("/health", func(ctx *gin.Context) {
+		ctx.String(200, "%s", "ok")
+	})
 	return router
 }
