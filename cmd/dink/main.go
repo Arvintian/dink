@@ -47,5 +47,9 @@ func main() {
 		Short: "Stop contianer",
 		Long:  "Stop contianer",
 	}))
+	root.AddCommand(cmdutil.Command(&app.ExecCommand{}, cobra.Command{
+		Short: "Exec command in contianer",
+		Long:  "Exec command in contianer",
+	}))
 	cmdutil.Main(root)
 }

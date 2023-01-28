@@ -45,7 +45,7 @@ func kubeConfigNamespace(dinkPath string, kubeConfig string) string {
 	return kubeService.Namespace
 }
 
-func forwardServer(ctx context.Context, dinkPath, kubeConfig, namespace, service string, port int) string {
+func forwardServer(ctx context.Context, dinkPath, kubeConfig, namespace, service string, port int) (string, *exec.Cmd) {
 	listenPort, err := getAvailablePort()
 	if err != nil {
 		panic(err)
@@ -55,7 +55,9 @@ func forwardServer(ctx context.Context, dinkPath, kubeConfig, namespace, service
 	runArgs = append(runArgs, "port-forward", fmt.Sprintf("svc/%s", service), "--address", "0.0.0.0", fmt.Sprintf("%d:%d", listenPort, port), "-n", namespace)
 	kubectl := exec.CommandContext(ctx, dinkPath, runArgs...)
 	go func() {
-		kubectl.Run()
+		if err := kubectl.Start(); err != nil {
+			fmt.Println(err)
+		}
 	}()
 	for i := 0; i < 100; i++ {
 		res, err := http.Get(fmt.Sprintf("%s/health", endpoint))
@@ -70,7 +72,7 @@ func forwardServer(ctx context.Context, dinkPath, kubeConfig, namespace, service
 		}
 		break
 	}
-	return endpoint
+	return endpoint, kubectl
 }
 
 func getAvailablePort() (int, error) {

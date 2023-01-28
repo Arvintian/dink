@@ -29,7 +29,12 @@ func (r *StartCommand) Run(cmd *cobra.Command, args []string) error {
 		r.Namespace = kubeConfigNamespace(self, kubeConfig)
 	}
 
-	serverEndpoint := forwardServer(cmd.Context(), self, kubeConfig, r.ServerNamespace, r.ServerService, r.ServerPort)
+	serverEndpoint, serverProxy := forwardServer(cmd.Context(), self, kubeConfig, r.ServerNamespace, r.ServerService, r.ServerPort)
+
+	defer func() {
+		serverProxy.Process.Kill()
+		serverProxy.Wait()
+	}()
 
 	rsp, err := req.Put(fmt.Sprintf("%s/containers/%s/%s/start", serverEndpoint, r.Namespace, args[0]))
 	if err != nil {
