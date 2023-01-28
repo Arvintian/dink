@@ -14,6 +14,7 @@ func CreateHTTPRouter(ctx context.Context, client k8s.Interface) *gin.Engine {
 	router.Use(gin.Recovery())
 	containers := router.Group("/containers")
 	{
+		containers.GET("/:namespace", handlers.ListContainer)
 		containers.POST("/:namespace/:name", handlers.CreateContainer)
 		containers.PUT("/:namespace/:name/start", handlers.StartContainer)
 		containers.PUT("/:namespace/:name/stop", handlers.StopContainer)
