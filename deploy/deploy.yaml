@@ -47,14 +47,14 @@ spec:
       serviceAccountName: dink
       containers:
         - name: dinkd
-          image: arvintian/dink-bundle:667b6d9
+          image: arvintian/dink-bundle:c172524
           ports:
             - containerPort: 8000
               name: http
           command:
             - /app/play
             - --agent-image
-            - arvintian/dink-bundle:667b6d9
+            - arvintian/dink-bundle:c172524
             - --nfs-server
             - dink.nfs.address
             - --nfs-path
@@ -99,7 +99,7 @@ spec:
       serviceAccountName: dink
       containers:
         - name: dink-dind
-          image: arvintian/dink-dind:667b6d9
+          image: arvintian/dink-dind:c172524
           ports:
             - containerPort: 2375
           env:
