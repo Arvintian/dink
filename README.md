@@ -1,4 +1,4 @@
-# dink
+# dink (docker in kubernetes)
 
 Run docker like persistent rootfs container in kubernetes.
 
