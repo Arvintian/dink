@@ -47,9 +47,17 @@ func main() {
 		Short: "Stop contianer",
 		Long:  "Stop contianer",
 	}))
+	root.AddCommand(cmdutil.Command(&app.EditCommand{}, cobra.Command{
+		Short: "Edit contianer in yaml",
+		Long:  "Edit contianer in yaml",
+	}))
 	root.AddCommand(cmdutil.Command(&app.ExecCommand{}, cobra.Command{
 		Short: "Exec command in contianer",
 		Long:  "Exec command in contianer",
+	}))
+	root.AddCommand(cmdutil.Command(&app.LogsCommand{}, cobra.Command{
+		Short: "Print the logs for a container",
+		Long:  "Print the logs for a container",
 	}))
 	cmdutil.Main(root)
 }
