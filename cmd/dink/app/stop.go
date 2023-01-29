@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	req "github.com/imroc/req/v3"
@@ -22,7 +23,11 @@ func (r *StopCommand) Run(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("requires at least 1 argument")
 	}
 
-	self, err := filepath.Abs(os.Args[0])
+	selfExecPath, err := exec.LookPath(os.Args[0])
+	if err != nil {
+		return err
+	}
+	self, err := filepath.Abs(selfExecPath)
 	if err != nil {
 		return err
 	}

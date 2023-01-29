@@ -15,7 +15,11 @@ type PsCommand struct {
 }
 
 func (r *PsCommand) Run(cmd *cobra.Command, args []string) error {
-	self, err := filepath.Abs(os.Args[0])
+	selfExecPath, err := exec.LookPath(os.Args[0])
+	if err != nil {
+		return err
+	}
+	self, err := filepath.Abs(selfExecPath)
 	if err != nil {
 		return err
 	}
