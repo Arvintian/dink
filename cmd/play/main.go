@@ -14,19 +14,20 @@ import (
 var Version = "0.0.0-dev"
 
 type DinkCommand struct {
-	Version    bool   `name:"version" usage:"show version"`
-	KubeConfig string `name:"kube-config" usage:"kube config file path"`
-	Bind       string `name:"bind" usage:"server bind address" default:"0.0.0.0:8000"`
-	Threads    int    `name:"threads" usage:"controller workers number" default:"2"`
-	Root       string `name:"root" usage:"dink root path" default:"/var/lib/dink"`
-	RunRoot    string `name:"run-root" usage:"dink runc root path" default:"/run/dink"`
-	RuncRoot   string `name:"runc-root" usage:"dink runc root path" default:"/run/dink/runc"`
-	DockerData string `name:"docker-data" usage:"docker data path" default:"/var/lib/dink/docker"`
-	DockerHost string `name:"docker-host" usage:"docker daemon host" default:"tcp://127.0.0.1:2375"`
-	AgentImage string `name:"agent-image" usage:"dink agent image"`
-	NFSServer  string `name:"nfs-server" usage:"nfs server address"`
-	NFSPath    string `name:"nfs-path" usage:"nfs mount path"`
-	NFSOptions string `name:"nfs-options" usage:"nfs mount options" default:"vers=3,timeo=600,retrans=10,intr,nolock"`
+	Version       bool   `name:"version" usage:"show version"`
+	KubeConfig    string `name:"kube-config" usage:"kube config file path"`
+	Bind          string `name:"bind" usage:"server bind address" default:"0.0.0.0:8000"`
+	Threads       int    `name:"threads" usage:"controller workers number" default:"2"`
+	ResyncPeriods int    `name:"resyncPeriods" usage:"controller resync periods second" default:"300"`
+	Root          string `name:"root" usage:"dink root path" default:"/var/lib/dink"`
+	RunRoot       string `name:"run-root" usage:"dink runc root path" default:"/run/dink"`
+	RuncRoot      string `name:"runc-root" usage:"dink runc root path" default:"/run/dink/runc"`
+	DockerData    string `name:"docker-data" usage:"docker data path" default:"/var/lib/dink/docker"`
+	DockerHost    string `name:"docker-host" usage:"docker daemon host" default:"tcp://127.0.0.1:2375"`
+	AgentImage    string `name:"agent-image" usage:"dink agent image"`
+	NFSServer     string `name:"nfs-server" usage:"nfs server address"`
+	NFSPath       string `name:"nfs-path" usage:"nfs mount path"`
+	NFSOptions    string `name:"nfs-options" usage:"nfs mount options" default:"vers=3,timeo=600,retrans=10,intr,nolock"`
 }
 
 func (r *DinkCommand) Run(cmd *cobra.Command, args []string) error {
@@ -35,17 +36,18 @@ func (r *DinkCommand) Run(cmd *cobra.Command, args []string) error {
 	}
 
 	controller := controllercmd.ControllerCommand{
-		KubeConfig: r.KubeConfig,
-		Threads:    r.Threads,
-		Root:       r.Root,
-		RunRoot:    r.RunRoot,
-		RuncRoot:   r.RuncRoot,
-		DockerData: r.DockerData,
-		DockerHost: r.DockerHost,
-		AgentImage: r.AgentImage,
-		NFSServer:  r.NFSServer,
-		NFSPath:    r.NFSPath,
-		NFSOptions: r.NFSOptions,
+		KubeConfig:    r.KubeConfig,
+		Threads:       r.Threads,
+		ResyncPeriods: r.ResyncPeriods,
+		Root:          r.Root,
+		RunRoot:       r.RunRoot,
+		RuncRoot:      r.RuncRoot,
+		DockerData:    r.DockerData,
+		DockerHost:    r.DockerHost,
+		AgentImage:    r.AgentImage,
+		NFSServer:     r.NFSServer,
+		NFSPath:       r.NFSPath,
+		NFSOptions:    r.NFSOptions,
 	}
 	go func() {
 		if err := controller.Run(cmd, args); err != nil {
