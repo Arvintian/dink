@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type StopCommand struct {
+type DeleteCommand struct {
 	KubeConfig      string `name:"kube-config" usage:"kube config file path" default:"~/.kube/config"`
 	Namespace       string `name:"namespace" short:"n" usage:"target namespace"`
 	ServerNamespace string `name:"server-namespace" usage:"dink server namespace" default:"dink"`
@@ -17,7 +17,7 @@ type StopCommand struct {
 	ServerPort      int    `name:"server-port" usage:"dink server port" default:"8000"`
 }
 
-func (r *StopCommand) Run(cmd *cobra.Command, args []string) error {
+func (r *DeleteCommand) Run(cmd *cobra.Command, args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("requires at least 1 argument")
 	}
@@ -40,7 +40,7 @@ func (r *StopCommand) Run(cmd *cobra.Command, args []string) error {
 		serverProxy.Wait()
 	}()
 
-	rsp, err := req.Put(fmt.Sprintf("%s/containers/%s/%s/stop", serverEndpoint, r.Namespace, args[0]))
+	rsp, err := req.Delete(fmt.Sprintf("%s/containers/%s/%s", serverEndpoint, r.Namespace, args[0]))
 	if err != nil {
 		return err
 	}
@@ -49,7 +49,7 @@ func (r *StopCommand) Run(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if rsp.StatusCode == 200 {
-		fmt.Printf("Stopping container %s\n", args[0])
+		fmt.Printf("Deleteing container %s\n", args[0])
 	} else {
 		fmt.Println(res)
 		serverProxy.Process.Kill()

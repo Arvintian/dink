@@ -7,6 +7,7 @@ require (
 	github.com/docker/docker v20.10.22+incompatible
 	github.com/gin-gonic/gin v1.8.2
 	github.com/imroc/req/v3 v3.31.0
+	github.com/moby/moby v20.10.23+incompatible
 	github.com/opencontainers/runtime-spec v1.0.2
 	github.com/spf13/cobra v1.6.0
 	k8s.io/api v0.20.2

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"dink/cmd/dink/app"
 
@@ -39,6 +40,14 @@ func main() {
 		Short: "List contianers",
 		Long:  "List contianers",
 	}))
+	root.AddCommand(cmdutil.Command(&app.CreateCommand{}, cobra.Command{
+		Short: "Create contianer",
+		Long:  "Create contianer",
+	}))
+	root.AddCommand(cmdutil.Command(&app.DeleteCommand{}, cobra.Command{
+		Short: "Delete contianer",
+		Long:  "Delete contianer",
+	}))
 	root.AddCommand(cmdutil.Command(&app.StartCommand{}, cobra.Command{
 		Short: "Start contianer",
 		Long:  "Start contianer",
@@ -60,4 +69,8 @@ func main() {
 		Long:  "Print the logs for a container",
 	}))
 	cmdutil.Main(root)
+}
+
+func init() {
+	os.Setenv("HOSTNAME", "")
 }

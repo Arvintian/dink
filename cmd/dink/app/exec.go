@@ -23,6 +23,10 @@ type ExecCommand struct {
 }
 
 func (r *ExecCommand) Run(cmd *cobra.Command, args []string) error {
+	if len(args) < 1 {
+		return fmt.Errorf("requires at least 1 argument")
+	}
+
 	self, err := filepath.Abs(os.Args[0])
 	if err != nil {
 		return err
