@@ -34,8 +34,9 @@ func CreatePodSepc(container *dinkv1beta1.Container, cfg Config) *corev1.Pod {
 	}
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   GetPodName(container),
-			Labels: labels,
+			Name:        GetPodName(container),
+			Labels:      labels,
+			Annotations: container.Annotations,
 			OwnerReferences: []metav1.OwnerReference{
 				{
 					APIVersion: dinkv1beta1.APIVersion,
