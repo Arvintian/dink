@@ -16,12 +16,13 @@ import (
 )
 
 type ExecCommand struct {
-	KubeConfig string `name:"kube-config" usage:"kube config file path" default:"~/.kube/config"`
-	Namespace  string `name:"namespace" short:"n" usage:"target namespace"`
-	Stdin      bool   `name:"stdin" short:"i" usage:"pass stdin to the container"`
-	TTY        bool   `name:"tty" short:"t" usage:"stdin is a tty"`
-	User       string `name:"user" short:"u" usage:"run as user (format: <uid>[:<gid>])"`
-	Workdir    string `name:"workdir" short:"w" usage:"working directory inside the container"`
+	KubeConfig string   `name:"kube-config" usage:"kube config file path" default:"~/.kube/config"`
+	Namespace  string   `name:"namespace" short:"n" usage:"target namespace"`
+	Stdin      bool     `name:"stdin" short:"i" usage:"pass stdin to the container"`
+	TTY        bool     `name:"tty" short:"t" usage:"stdin is a tty"`
+	Env        []string `name:"env" short:"e" usage:"set container environment variables"`
+	User       string   `name:"user" short:"u" usage:"run as user (format: <uid>[:<gid>])"`
+	Workdir    string   `name:"workdir" short:"w" usage:"working directory inside the container"`
 }
 
 func (r *ExecCommand) Run(cmd *cobra.Command, args []string) error {
@@ -88,7 +89,12 @@ func (r *ExecCommand) Run(cmd *cobra.Command, args []string) error {
 		runArgs = append(runArgs, "-u", r.User)
 	}
 	if r.Workdir != "" {
-		runArgs = append(runArgs, "-w", r.Workdir)
+		runArgs = append(runArgs, "--cwd", r.Workdir)
+	}
+	if len(r.Env) > 0 {
+		for _, env := range r.Env {
+			runArgs = append(runArgs, "-e", env)
+		}
 	}
 
 	runArgs = append(runArgs, container.Status.ContainerID)

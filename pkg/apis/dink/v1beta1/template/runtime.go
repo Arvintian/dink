@@ -25,14 +25,16 @@ func CreateRuntimeConfig(container *dinkv1beta1.Container, image types.ImageInsp
 	if image.Config.WorkingDir != "" {
 		config.Process.Cwd = image.Config.WorkingDir
 	}
-	if container.Spec.Template.SecurityContext.RunAsUser != nil {
-		config.Process.User.UID = uint32(*container.Spec.Template.SecurityContext.RunAsUser)
-	}
-	if container.Spec.Template.SecurityContext.RunAsGroup != nil {
-		config.Process.User.GID = uint32(*container.Spec.Template.SecurityContext.RunAsGroup)
+	if container.Spec.Template.SecurityContext != nil {
+		if container.Spec.Template.SecurityContext.RunAsUser != nil {
+			config.Process.User.UID = uint32(*container.Spec.Template.SecurityContext.RunAsUser)
+		}
+		if container.Spec.Template.SecurityContext.RunAsGroup != nil {
+			config.Process.User.GID = uint32(*container.Spec.Template.SecurityContext.RunAsGroup)
+		}
 	}
 
-	config.Hostname = GetHostName(container)
+	config.Hostname = GetPodName(container)
 	if container.Spec.HostName != "" {
 		config.Hostname = container.Spec.HostName
 	}
