@@ -16,6 +16,8 @@ type ContainerConfig struct {
 	Cmd           []string                    `json:"cmd"`
 	Stdin         bool                        `json:"stdin"`
 	TTY           bool                        `json:"tty"`
+	UID           *int64                      `json:"uid"`
+	GID           *int64                      `json:"gid"`
 	Resources     corev1.ResourceRequirements `json:"resources"`
 }
 

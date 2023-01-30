@@ -39,6 +39,10 @@ func CreateContainer(c *gin.Context) {
 				Stdin:      payload.Stdin,
 				TTY:        payload.TTY,
 				Resources:  payload.Resources,
+				SecurityContext: &corev1.SecurityContext{
+					RunAsUser:  payload.UID,
+					RunAsGroup: payload.GID,
+				},
 			},
 		},
 	}

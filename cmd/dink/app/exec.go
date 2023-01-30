@@ -20,6 +20,8 @@ type ExecCommand struct {
 	Namespace  string `name:"namespace" short:"n" usage:"target namespace"`
 	Stdin      bool   `name:"stdin" short:"i" usage:"pass stdin to the container"`
 	TTY        bool   `name:"tty" short:"t" usage:"stdin is a tty"`
+	User       string `name:"user" short:"u" usage:"run as user (format: <uid>[:<gid>])"`
+	Workdir    string `name:"workdir" short:"w" usage:"working directory inside the container"`
 }
 
 func (r *ExecCommand) Run(cmd *cobra.Command, args []string) error {
@@ -82,6 +84,13 @@ func (r *ExecCommand) Run(cmd *cobra.Command, args []string) error {
 	if r.TTY {
 		runArgs = append(runArgs, "-t")
 	}
+	if r.User != "" {
+		runArgs = append(runArgs, "-u", r.User)
+	}
+	if r.Workdir != "" {
+		runArgs = append(runArgs, "-w", r.Workdir)
+	}
+
 	runArgs = append(runArgs, container.Status.ContainerID)
 	runArgs = append(runArgs, args[1:]...)
 

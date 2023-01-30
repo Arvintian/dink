@@ -73,4 +73,5 @@ func main() {
 
 func init() {
 	os.Setenv("HOSTNAME", "")
+	os.Setenv("USER", "")
 }

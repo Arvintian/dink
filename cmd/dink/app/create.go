@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	req "github.com/imroc/req/v3"
@@ -28,6 +29,7 @@ type CreateCommand struct {
 	Entrypoint      string   `name:"entrypoint" usage:"overwrite the default ENTRYPOINT of the image"`
 	Interactive     bool     `name:"interactive" short:"i" usage:"keep container's STDIN open"`
 	TTY             bool     `name:"tty" short:"t" usage:"allocate a pseudo-TTY"`
+	User            string   `name:"user" short:"u" usage:"run as user (format: <uid>[:<gid>])"`
 }
 
 func (r *CreateCommand) Run(cmd *cobra.Command, args []string) error {
@@ -82,6 +84,24 @@ func (r *CreateCommand) Run(cmd *cobra.Command, args []string) error {
 			Value: sp[1],
 		})
 	}
+	var user, group *int64
+	if r.User != "" {
+		sp := strings.Split(r.User, ":")
+		uid, err := strconv.Atoi(sp[0])
+		if err != nil {
+			return err
+		}
+		theUID := int64(uid)
+		user, group = &theUID, &theUID
+		if len(sp) > 1 {
+			gid, err := strconv.Atoi(sp[1])
+			if err != nil {
+				return err
+			}
+			theGID := int64(gid)
+			group = &theGID
+		}
+	}
 
 	payload := handlers.ContainerConfig{
 		Image:         args[0],
@@ -93,6 +113,8 @@ func (r *CreateCommand) Run(cmd *cobra.Command, args []string) error {
 		Cmd:           command,
 		Stdin:         r.Interactive,
 		TTY:           r.TTY,
+		UID:           user,
+		GID:           group,
 	}
 	rsp, err := req.C().R().SetBodyJsonMarshal(payload).Post(fmt.Sprintf("%s/containers/%s/%s", serverEndpoint, r.Namespace, name))
 	if err != nil {
